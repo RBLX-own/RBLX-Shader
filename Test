@@ -89,20 +89,17 @@ local okCorner = Instance.new("UICorner")
 okCorner.CornerRadius = UDim.new(0, 6)
 okCorner.Parent = closeBtn
 
--- Popup Animation (Fade-in & Scale)
+-- Fixed Popup Animation (Fade-in & Scale)
 task.wait(0.1)
-mainFrame:TweenSizeAndPosition(
-    UDim2.new(0, 400, 0, 250),
-    UDim2.new(0.5, 0, 0.5, 0),
-    Enum.EasingDirection.Out,
-    Enum.EasingStyle.Back,
-    0.6,
-    true
+-- First do the size animation
+mainFrame:TweenSize(UDim2.new(0, 400, 0, 250), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.6, true)
+-- Then do the fade-in animation
+local fadeInTween = game:GetService("TweenService"):Create(
+    mainFrame,
+    TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {BackgroundTransparency = 0}
 )
-for i = 1, 0, -0.05 do
-    mainFrame.BackgroundTransparency = i
-    task.wait(0.02)
-end
+fadeInTween:Play()
 
 -- Copy link on click
 linkText.MouseButton1Click:Connect(function()
@@ -119,16 +116,32 @@ end)
 -- Close button function
 closeBtn.MouseButton1Click:Connect(function()
     -- Fade out animation
-    for i = 0, 1, 0.05 do
-        mainFrame.BackgroundTransparency = i
-        task.wait(0.02)
-    end
+    local fadeOutTween = game:GetService("TweenService"):Create(
+        mainFrame,
+        TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+        {BackgroundTransparency = 1}
+    )
+    fadeOutTween:Play()
+    
+    task.wait(0.4)
     mainFrame:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.5, true)
     task.wait(0.5)
     
     -- Load the second script interface
     createSecondInterface()
 end)
+
+-- Store script states
+local scriptStates = {
+    shaderEnabled = false,
+    fpsBoostEnabled = false
+}
+
+-- Store created instances for cleanup
+local createdInstances = {
+    shader = {},
+    fpsBoost = {}
+}
 
 -- Second Interface Function
 function createSecondInterface()
@@ -170,7 +183,7 @@ function createSecondInterface()
     shaderBtn.Position = UDim2.new(0.1, 0, 0.3, 0)
     shaderBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     shaderBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-    shaderBtn.Text = "Shader"
+    shaderBtn.Text = "Shader: OFF"
     shaderBtn.Font = Enum.Font.SourceSansBold
     shaderBtn.TextSize = 18
     shaderBtn.Parent = secondFrame
@@ -185,7 +198,7 @@ function createSecondInterface()
     fpsBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
     fpsBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     fpsBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-    fpsBtn.Text = "FPS Boost (Fix Lag)"
+    fpsBtn.Text = "FPS Boost: OFF"
     fpsBtn.Font = Enum.Font.SourceSansBold
     fpsBtn.TextSize = 18
     fpsBtn.Parent = secondFrame
@@ -209,24 +222,77 @@ function createSecondInterface()
     secondOkCorner.CornerRadius = UDim.new(0, 6)
     secondOkCorner.Parent = secondCloseBtn
 
-    -- Popup Animation for second interface (Fade-in & Scale)
+    -- Fixed Popup Animation for second interface (Fade-in & Scale)
     task.wait(0.1)
-    secondFrame:TweenSizeAndPosition(
-        UDim2.new(0, 350, 0, 300),
-        UDim2.new(0.5, 0, 0.5, 0),
-        Enum.EasingDirection.Out,
-        Enum.EasingStyle.Back,
-        0.6,
-        true
+    -- First do the size animation
+    secondFrame:TweenSize(UDim2.new(0, 350, 0, 300), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.6, true)
+    -- Then do the fade-in animation
+    local secondFadeInTween = game:GetService("TweenService"):Create(
+        secondFrame,
+        TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        {BackgroundTransparency = 0}
     )
-    for i = 1, 0, -0.05 do
-        secondFrame.BackgroundTransparency = i
-        task.wait(0.02)
-    end
+    secondFadeInTween:Play()
 
-    -- Button 1 functionality (Shader)
-    shaderBtn.MouseButton1Click:Connect(function()
+    -- Function to apply shader effects
+    local function applyShader()
         local a = game.Lighting
+        
+        -- Store created instances for cleanup
+        local b = Instance.new("BloomEffect", a)
+        b.Enabled = true
+        b.Intensity = 0.99
+        b.Size = 9999 
+        b.Threshold = 0
+        table.insert(createdInstances.shader, b)
+        
+        local c = Instance.new("ColorCorrectionEffect", a)
+        c.Brightness = 0.015
+        c.Contrast = 0.25
+        c.Enabled = true
+        c.Saturation = 0.2
+        c.TintColor = Color3.fromRGB(217, 145, 57)
+        table.insert(createdInstances.shader, c)
+        
+        if getgenv().mode == "Summer" then
+            c.TintColor = Color3.fromRGB(255, 220, 148)
+        elseif getgenv().mode == "Autumn" then
+            c.TintColor = Color3.fromRGB(217, 145, 57)
+        else
+            warn("No mode selected! Using default mode.")
+        end
+        
+        local d = Instance.new("DepthOfFieldEffect", a)
+        d.Enabled = true
+        d.FarIntensity = 0.077
+        d.FocusDistance = 21.54
+        d.InFocusRadius = 20.77
+        d.NearIntensity = 0.277
+        table.insert(createdInstances.shader, d)
+        
+        local e = Instance.new("ColorCorrectionEffect", a)
+        e.Brightness = 0
+        e.Contrast = -0.07
+        e.Saturation = 0
+        e.Enabled = true
+        e.TintColor = Color3.fromRGB(255, 247, 239)
+        table.insert(createdInstances.shader, e)
+        
+        local e2 = Instance.new("ColorCorrectionEffect", a)
+        e2.Brightness = 0.2
+        e2.Contrast = 0.45
+        e2.Saturation = -0.1
+        e2.Enabled = true
+        e2.TintColor = Color3.fromRGB(255, 255, 255)
+        table.insert(createdInstances.shader, e2)
+        
+        local s = Instance.new("SunRaysEffect", a)
+        s.Enabled = true
+        s.Intensity = 0.01
+        s.Spread = 0.146
+        table.insert(createdInstances.shader, s)
+        
+        -- Apply lighting properties
         a.Ambient = Color3.fromRGB(33, 33, 33)
         a.Brightness = 5.69
         a.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
@@ -238,85 +304,126 @@ function createSecondInterface()
         a.ShadowSoftness = 0.18
         a.GeographicLatitude = -15.525
         a.ExposureCompensation = 0.75
+    end
+
+    -- Function to remove shader effects
+    local function removeShader()
+        for _, instance in ipairs(createdInstances.shader) do
+            if instance and instance.Parent then
+                instance:Destroy()
+            end
+        end
+        createdInstances.shader = {}
         
-        local b = Instance.new("BloomEffect", a)
-        b.Enabled = true
-        b.Intensity = 0.99
-        b.Size = 9999 
-        b.Threshold = 0
-        
-        local c = Instance.new("ColorCorrectionEffect", a)
-        c.Brightness = 0.015
-        c.Contrast = 0.25
-        c.Enabled = true
-        c.Saturation = 0.2
-        c.TintColor = Color3.fromRGB(217, 145, 57)
-        
-        if getgenv().mode == "Summer" then
-            c.TintColor = Color3.fromRGB(255, 220, 148)
-        elseif getgenv().mode == "Autumn" then
-            c.TintColor = Color3.fromRGB(217, 145, 57)
-        else
-            warn("No mode selected!")
-            print("Please select a mode")
-            b:Destroy()
-            c:Destroy()
+        -- Reset lighting to default
+        local a = game.Lighting
+        a.Ambient = Color3.fromRGB(0, 0, 0)
+        a.Brightness = 1
+        a.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
+        a.ColorShift_Top = Color3.fromRGB(0, 0, 0)
+        a.EnvironmentDiffuseScale = 1
+        a.EnvironmentSpecularScale = 1
+        a.GlobalShadows = true
+        a.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+        a.ShadowSoftness = 0
+        a.GeographicLatitude = 0
+        a.ExposureCompensation = 0
+    end
+
+    -- Function to apply FPS Boost
+    local function applyFPSBoost()
+        -- Store the FPS boost function
+        local fpsBoostFunction = function()
+            local v0=tonumber;local v1=string.byte;local v2=string.char;local v3=string.sub;local v4=string.gsub;local v5=string.rep;local v6=table.concat;local v7=table.insert;local v8=math.ldexp;local v9=getfenv or function() return _ENV;end ;local v10=setmetatable;local v11=pcall;local v12=select;local v13=unpack or table.unpack ;local v14=tonumber;local function v15(v16,v17,...) 
+                -- FPS optimization code would go here
+                -- This is the obfuscated FPS boost script
+                
+                -- Basic FPS optimizations
+                settings().Rendering.QualityLevel = 1
+                settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level01
+                game:GetService("Lighting").GlobalShadows = false
+                game:GetService("Lighting").FantasySky.Enabled = false
+                
+                -- Reduce graphics quality for better performance
+                for _, descendant in pairs(workspace:GetDescendants()) do
+                    if descendant:IsA("Part") then
+                        descendant.Material = Enum.Material.Plastic
+                    elseif descendant:IsA("Decal") then
+                        descendant.Transparency = 0.5
+                    end
+                end
+            end
+            
+            -- Apply FPS optimizations
+            v15()
         end
         
-        local d = Instance.new("DepthOfFieldEffect", a)
-        d.Enabled = true
-        d.FarIntensity = 0.077
-        d.FocusDistance = 21.54
-        d.InFocusRadius = 20.77
-        d.NearIntensity = 0.277
+        -- Store the function reference
+        createdInstances.fpsBoost.functionRef = fpsBoostFunction
+        -- Apply FPS boost
+        fpsBoostFunction()
+    end
+
+    -- Function to remove FPS Boost
+    local function removeFPSBoost()
+        -- Reset graphics settings
+        settings().Rendering.QualityLevel = 8
+        settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level04
+        game:GetService("Lighting").GlobalShadows = true
         
-        local e = Instance.new("ColorCorrectionEffect", a)
-        e.Brightness = 0
-        e.Contrast = -0.07
-        e.Saturation = 0
-        e.Enabled = true
-        e.TintColor = Color3.fromRGB(255, 247, 239)
-        
-        local e2 = Instance.new("ColorCorrectionEffect", a)
-        e2.Brightness = 0.2
-        e2.Contrast = 0.45
-        e2.Saturation = -0.1
-        e2.Enabled = true
-        e2.TintColor = Color3.fromRGB(255, 255, 255)
-        
-        local s = Instance.new("SunRaysEffect", a)
-        s.Enabled = true
-        s.Intensity = 0.01
-        s.Spread = 0.146
-        
-        shaderBtn.Text = "Shader Applied!"
-        task.wait(1.5)
-        shaderBtn.Text = "Shader"
+        -- Clear the function reference
+        createdInstances.fpsBoost.functionRef = nil
+    end
+
+    -- Button 1 functionality (Shader) - Toggle
+    shaderBtn.MouseButton1Click:Connect(function()
+        if scriptStates.shaderEnabled then
+            -- Turn off shader
+            removeShader()
+            scriptStates.shaderEnabled = false
+            shaderBtn.Text = "Shader: OFF"
+            shaderBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            shaderBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+        else
+            -- Turn on shader
+            applyShader()
+            scriptStates.shaderEnabled = true
+            shaderBtn.Text = "Shader: ON"
+            shaderBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+            shaderBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        end
     end)
 
-    -- Button 2 functionality (FPS Boost)
+    -- Button 2 functionality (FPS Boost) - Toggle
     fpsBtn.MouseButton1Click:Connect(function()
-        -- FPS Boost script (obfuscated code from your second script)
-        local v0=tonumber;local v1=string.byte;local v2=string.char;local v3=string.sub;local v4=string.gsub;local v5=string.rep;local v6=table.concat;local v7=table.insert;local v8=math.ldexp;local v9=getfenv or function() return _ENV;end ;local v10=setmetatable;local v11=pcall;local v12=select;local v13=unpack or table.unpack ;local v14=tonumber;local function v15(v16,v17,...) 
-            -- FPS optimization code would go here
-            -- This is the obfuscated FPS boost script
+        if scriptStates.fpsBoostEnabled then
+            -- Turn off FPS boost
+            removeFPSBoost()
+            scriptStates.fpsBoostEnabled = false
+            fpsBtn.Text = "FPS Boost: OFF"
+            fpsBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            fpsBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+        else
+            -- Turn on FPS boost
+            applyFPSBoost()
+            scriptStates.fpsBoostEnabled = true
+            fpsBtn.Text = "FPS Boost: ON"
+            fpsBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+            fpsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         end
-        
-        -- Apply FPS optimizations
-        v15()
-        
-        fpsBtn.Text = "FPS Boost Applied!"
-        task.wait(1.5)
-        fpsBtn.Text = "FPS Boost (Fix Lag)"
     end)
 
     -- Close button for second interface
     secondCloseBtn.MouseButton1Click:Connect(function()
         -- Fade out animation
-        for i = 0, 1, 0.05 do
-            secondFrame.BackgroundTransparency = i
-            task.wait(0.02)
-        end
+        local secondFadeOutTween = game:GetService("TweenService"):Create(
+            secondFrame,
+            TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            {BackgroundTransparency = 1}
+        )
+        secondFadeOutTween:Play()
+        
+        task.wait(0.4)
         secondFrame:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.5, true)
         task.wait(0.5)
         secondGui:Destroy()
