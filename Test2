@@ -1,264 +1,336 @@
--- ULTRA ENHANCER - Movable Toggle Squircle Button
--- Toggles FPS Boost + Shader when clicked
--- Icon stays movable in the middle initially
+--// Updated Combined GUI Script (Telegram Popup + Floating Icon + Shader + FPS Booster + FPS Display)
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
-repeat task.wait() until game:IsLoaded()
-repeat task.wait() until game.Players.LocalPlayer
-
-local Players        = game:GetService("Players")
-local TweenService   = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local RunService     = game:GetService("RunService")
-local Lighting       = game:GetService("Lighting")
-
-local player    = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-
--- Clear previous
-if playerGui:FindFirstChild("UltraEnhancerGUI") then
-    playerGui.UltraEnhancerGUI:Destroy()
-end
-
+-- Main GUI
 local gui = Instance.new("ScreenGui")
-gui.Name = "UltraEnhancerGUI"
+gui.Name = "EnhancedGUI"
 gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.DisplayOrder = 15
-gui.Parent = playerGui
+gui.Parent = player:WaitForChild("PlayerGui")
 
-print("Ultra Enhancer loading...")
+local imageUrl = "https://drive.google.com/uc?id=1sFBzKFh-XqUg21-IgqRFz3IrNtK8tA_b"
 
--- ──────────────────────────────────────────────
---                   SETTINGS
--- ──────────────────────────────────────────────
-local Storage = {
-    iconPosition = {X = 0.5, Y = 0.5},
-    isEnabled    = false,          -- current toggle state
-}
-
-local function SaveSettings()
-    _G.UltraEnhancer_Data = Storage
+-- Telegram persistence
+local telegramDone = player:FindFirstChild("TelegramDone")
+if not telegramDone then
+    telegramDone = Instance.new("BoolValue")
+    telegramDone.Name = "TelegramDone"
+    telegramDone.Value = false
+    telegramDone.Parent = player
 end
 
-local function LoadSettings()
-    if _G.UltraEnhancer_Data then
-        for k, v in pairs(_G.UltraEnhancer_Data) do
-            Storage[k] = v
-        end
-    end
-end
+local showTelegram = not telegramDone.Value
 
-LoadSettings()
+-- Floating Icon (Squircle movable button)
+local icon = Instance.new("ImageButton")
+icon.Name = "ToggleIcon"
+icon.Size = UDim2.new(0, 0, 0, 0)
+icon.AnchorPoint = Vector2.new(0.5, 0.5)
+icon.Position = UDim2.new(0.5, 0, 0.5, 0)
+icon.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+icon.BackgroundTransparency = 0.2
+icon.Image = imageUrl
+icon.ImageTransparency = 0
+icon.ScaleType = Enum.ScaleType.Fit
+icon.Active = true
+icon.Draggable = true
+icon.ZIndex = 10
+icon.Parent = gui
 
--- ──────────────────────────────────────────────
---              MOVABLE TOGGLE ICON
--- ──────────────────────────────────────────────
-local icon, isDragging, dragStart, startPos
-local activeEffects = {}   -- store connections / objects to clean up
+local iconCorner = Instance.new("UICorner")
+iconCorner.CornerRadius = UDim.new(0, 20)
+iconCorner.Parent = icon
 
-local function DestroyEffects()
-    for _, obj in pairs(activeEffects) do
-        if typeof(obj) == "RBXScriptConnection" then
-            obj:Disconnect()
-        elseif obj.Destroy then
-            obj:Destroy()
-        end
-    end
-    activeEffects = {}
-    Storage.isEnabled = false
-    SaveSettings()
-end
+local iconStroke = Instance.new("UIStroke")
+iconStroke.Color = Color3.fromRGB(255, 255, 255)
+iconStroke.Thickness = 2
+iconStroke.Transparency = 0.4
+iconStroke.Parent = icon
 
-local function ApplyEnhancements()
-    DestroyEffects()    -- clean previous
-
-    Storage.isEnabled = true
-    SaveSettings()
-
-    -- ─── FPS BOOST ───────────────────────────────────────
-    local lightingProps = {
-        GlobalShadows   = false,
-        Brightness      = 1,
-        ClockTime       = 14,
-        FogEnd          = 9999,
-        EnvironmentDiffuseScale = 0,
-        EnvironmentSpecularScale = 0,
-    }
-
-    for prop, value in pairs(lightingProps) do
-        if Lighting[prop] ~= value then
-            Lighting[prop] = value
-        end
-    end
-
-    -- Remove heavy post-effects
-    for _, effect in pairs(Lighting:GetChildren()) do
-        if effect:IsA("PostEffect") or effect:IsA("Sky") or effect:IsA("BloomEffect") or
-           effect:IsA("BlurEffect") or effect:IsA("DepthOfFieldEffect") or
-           effect:IsA("SunRaysEffect") then
-            table.insert(activeEffects, effect)
-            effect.Enabled = false
-        end
-    end
-
-    -- ─── SHADER (simple but visible color + bloom-like) ──
-    local colorCorrection = Instance.new("ColorCorrectionEffect")
-    colorCorrection.Name = "UltraColor"
-    colorCorrection.Parent = Lighting
-    colorCorrection.Enabled = true
-    colorCorrection.Brightness = 0.12
-    colorCorrection.Contrast = 0.25
-    colorCorrection.Saturation = 0.4
-    colorCorrection.TintColor = Color3.fromRGB(245, 235, 255)
-
-    local bloom = Instance.new("BloomEffect")
-    bloom.Name = "UltraBloom"
-    bloom.Parent = Lighting
-    bloom.Intensity = 0.9
-    bloom.Size = 32
-    bloom.Threshold = 1.1
-    bloom.Enabled = true
-
-    table.insert(activeEffects, colorCorrection)
-    table.insert(activeEffects, bloom)
-
-    print("Ultra Enhancer → ACTIVATED")
-end
-
-local function CreateToggleIcon()
-
-    if icon then icon:Destroy() end
-
-    icon = Instance.new("ImageButton")
-    icon.Name = "EnhancerToggle"
-    icon.Size = UDim2.new(0, 90, 0, 90)
-    icon.AnchorPoint = Vector2.new(0.5, 0.5)
-    icon.AutoButtonColor = false
-    icon.BackgroundColor3 = Color3.fromRGB(30, 30, 55)
-    icon.BackgroundTransparency = 0.15
-    icon.ZIndex = 10
-
-    -- Initial position (normalized → absolute)
-    local cam = workspace.CurrentCamera
-    local screen = cam.ViewportSize
-    icon.Position = UDim2.new(
-        Storage.iconPosition.X, Storage.iconPosition.X * screen.X,
-        Storage.iconPosition.Y, Storage.iconPosition.Y * screen.Y
-    )
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0.5, 0)   -- almost circle → squircle
-    corner.Parent = icon
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(90, 140, 255)
-    stroke.Thickness = 2.5
-    stroke.Transparency = 0.3
-    stroke.Parent = icon
-
-    -- Inner symbol
-    local symbol = Instance.new("TextLabel", icon)
-    symbol.Size = UDim2.new(1,0,1,0)
-    symbol.BackgroundTransparency = 1
-    symbol.Font = Enum.Font.GothamBlack
-    symbol.Text = "⚡"
-    symbol.TextColor3 = Color3.new(1,1,1)
-    symbol.TextSize = 48
-    symbol.TextStrokeTransparency = 0.7
-    symbol.TextStrokeColor3 = Color3.new(0,0,0)
-
-    -- ─── DRAGGING ───────────────────────────────────────
-    icon.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or
-           input.UserInputType == Enum.UserInputType.Touch then
-            isDragging = true
-            dragStart = Vector2.new(input.Position.X, input.Position.Y)
-            startPos  = icon.Position
-            TweenService:Create(icon, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
-        end
-    end)
-
-    icon.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or
-           input.UserInputType == Enum.UserInputType.Touch then
-            isDragging = false
-            -- save normalized position
-            local sz = workspace.CurrentCamera.ViewportSize
-            Storage.iconPosition.X = icon.Position.X.Offset / sz.X
-            Storage.iconPosition.Y = icon.Position.Y.Offset / sz.Y
-            SaveSettings()
-            TweenService:Create(icon, TweenInfo.new(0.2), {BackgroundTransparency = 0.15}):Play()
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if not isDragging then return end
-        if input.UserInputType ~= Enum.UserInputType.MouseMovement and
-           input.UserInputType ~= Enum.UserInputType.Touch then return end
-
-        local delta = Vector2.new(input.Position.X - dragStart.X, input.Position.Y - dragStart.Y)
-        icon.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-    end)
-
-    -- ─── TOGGLE LOGIC ───────────────────────────────────
-    local function updateVisual()
-        if Storage.isEnabled then
-            stroke.Color = Color3.fromRGB(40, 255, 120)
-            stroke.Thickness = 3.5
-            symbol.TextColor3 = Color3.fromRGB(120, 255, 160)
-            TweenService:Create(icon, TweenInfo.new(0.4), {BackgroundColor3 = Color3.fromRGB(45, 70, 50)}):Play()
-        else
-            stroke.Color = Color3.fromRGB(90, 140, 255)
-            stroke.Thickness = 2.5
-            symbol.TextColor3 = Color3.new(1,1,1)
-            TweenService:Create(icon, TweenInfo.new(0.4), {BackgroundColor3 = Color3.fromRGB(30, 30, 55)}):Play()
-        end
-    end
-
-    icon.MouseButton1Click:Connect(function()
-        if isDragging then return end
-
-        if Storage.isEnabled then
-            DestroyEffects()
-            print("Ultra Enhancer → DEACTIVATED")
-        else
-            ApplyEnhancements()
-        end
-
-        updateVisual()
-    end)
-
-    -- Initial visual state
-    updateVisual()
-
-    -- subtle float animation
-    task.spawn(function()
-        local t = 0
-        while icon.Parent do
-            if not isDragging then
-                t += 0.035
-                local offsetY = math.sin(t) * 3
-                icon.Position += UDim2.new(0,0,0,offsetY - (icon.Position.Y.Offset % 1))
-            end
-            task.wait(0.07)
-        end
-    end)
-
-    icon.Parent = gui
-    print("Toggle icon created")
-end
-
--- Start
-CreateToggleIcon()
-
--- Re-create icon if player respawns (optional improvement)
-player.CharacterAdded:Connect(function()
-    task.wait(1.5)
-    CreateToggleIcon()
+-- Icon hover effects (satisfying scale)
+icon.MouseEnter:Connect(function()
+    TweenService:Create(icon, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 60, 0, 60)}):Play()
+    TweenService:Create(iconStroke, TweenInfo.new(0.15), {Transparency = 0}):Play()
 end)
+
+icon.MouseLeave:Connect(function()
+    TweenService:Create(icon, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 50, 0, 50)}):Play()
+    TweenService:Create(iconStroke, TweenInfo.new(0.15), {Transparency = 0.4}):Play()
+end)
+
+-- Enhancer variables
+local enhancerFrame = nil
+local isOpen = false
+local fpsConnection = nil
+local fullFrameSize = UDim2.new(0, 280, 0, 190)
+
+local function createEnhancer()
+    enhancerFrame = Instance.new("Frame")
+    enhancerFrame.Name = "GameEnhancer"
+    enhancerFrame.Size = fullFrameSize
+    enhancerFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    enhancerFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    enhancerFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    enhancerFrame.BackgroundTransparency = 0.1
+    enhancerFrame.Active = true
+    enhancerFrame.Draggable = true
+    enhancerFrame.BorderSizePixel = 0
+    enhancerFrame.ZIndex = 5
+    enhancerFrame.Parent = gui
+
+    local frameCorner = Instance.new("UICorner")
+    frameCorner.CornerRadius = UDim.new(0, 16)
+    frameCorner.Parent = enhancerFrame
+
+    local frameStroke = Instance.new("UIStroke")
+    frameStroke.Color = Color3.fromRGB(120, 120, 255)
+    frameStroke.Thickness = 1.5
+    frameStroke.Transparency = 0.3
+    frameStroke.Parent = enhancerFrame
+
+    local frameGradient = Instance.new("UIGradient")
+    frameGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 40)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
+    })
+    frameGradient.Rotation = 135
+    frameGradient.Parent = enhancerFrame
+
+    -- Close Button (Modern X)
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 32, 0, 32)
+    closeBtn.Position = UDim2.new(1, -36, 0, 4)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(255, 85, 85)
+    closeBtn.BackgroundTransparency = 0.1
+    closeBtn.Text = "✕"
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 20
+    closeBtn.ZIndex = 15
+    closeBtn.Parent = enhancerFrame
+
+    local closeCorner = Instance.new("UICorner")
+    closeCorner.CornerRadius = UDim.new(0, 8)
+    closeCorner.Parent = closeBtn
+
+    local closeStroke = Instance.new("UIStroke")
+    closeStroke.Color = Color3.fromRGB(255, 255, 255)
+    closeStroke.Thickness = 1.5
+    closeStroke.Transparency = 0.5
+    closeStroke.Parent = closeBtn
+
+    -- Hover for close
+    closeBtn.MouseEnter:Connect(function()
+        TweenService:Create(closeBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0, Size = UDim2.new(0, 36, 0, 36)}):Play()
+        TweenService:Create(closeStroke, TweenInfo.new(0.15), {Transparency = 0}):Play()
+    end)
+    closeBtn.MouseLeave:Connect(function()
+        TweenService:Create(closeBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.1, Size = UDim2.new(0, 32, 0, 32)}):Play()
+        TweenService:Create(closeStroke, TweenInfo.new(0.15), {Transparency = 0.5}):Play()
+    end)
+
+    -- Title
+    local title2 = Instance.new("TextLabel")
+    title2.Size = UDim2.new(1, -40, 0, 35)
+    title2.Position = UDim2.new(0, 10, 0, 8)
+    title2.BackgroundTransparency = 1
+    title2.Text = "Game Enhancer"
+    title2.Font = Enum.Font.GothamBold
+    title2.TextSize = 20
+    title2.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title2.TextXAlignment = Enum.TextXAlignment.Left
+    title2.ZIndex = 10
+    title2.Parent = enhancerFrame
+
+    -- Shader Toggle Button
+    local shaderBtn = Instance.new("TextButton")
+    shaderBtn.Size = UDim2.new(0.85, 0, 0, 48)
+    shaderBtn.Position = UDim2.new(0.075, 0, 0.25, 0)
+    shaderBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    shaderBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    shaderBtn.Font = Enum.Font.GothamBold
+    shaderBtn.TextSize = 16
+    shaderBtn.Text = "Enable Shader"
+    shaderBtn.ZIndex = 10
+    shaderBtn.Parent = enhancerFrame
+
+    local shaderCorner = Instance.new("UICorner")
+    shaderCorner.CornerRadius = UDim.new(0, 12)
+    shaderCorner.Parent = shaderBtn
+
+    local shaderStroke = Instance.new("UIStroke")
+    shaderStroke.Color = Color3.fromRGB(0, 162, 255)
+    shaderStroke.Thickness = 2
+    shaderStroke.Transparency = 0.6
+    shaderStroke.Parent = shaderBtn
+
+    -- Hover for shader
+    shaderBtn.MouseEnter:Connect(function()
+        TweenService:Create(shaderStroke, TweenInfo.new(0.15), {Transparency = 0.2}):Play()
+    end)
+    shaderBtn.MouseLeave:Connect(function()
+        TweenService:Create(shaderStroke, TweenInfo.new(0.15), {Transparency = 0.6}):Play()
+    end)
+
+    -- Shader logic (toggle)
+    local shaderEnabled = false
+    local shaderEffects = {}
+
+    shaderBtn.MouseButton1Click:Connect(function()
+        local lighting = game:GetService("Lighting")
+        if not shaderEnabled then
+            -- Enable Ultra Realistic Shader
+            lighting.Ambient = Color3.fromRGB(25, 28, 35)
+            lighting.Brightness = 1.8
+            lighting.ColorShift_Bottom = Color3.fromRGB(8, 10, 15)
+            lighting.ColorShift_Top = Color3.fromRGB(180, 200, 220)
+            lighting.EnvironmentDiffuseScale = 0.6
+            lighting.EnvironmentSpecularScale = 0.25
+            lighting.GlobalShadows = true
+            lighting.ShadowSoftness = 0.08
+            lighting.OutdoorAmbient = Color3.fromRGB(90, 105, 125)
+            lighting.GeographicLatitude = 45
+            lighting.ExposureCompensation = 0.15
+            lighting.ClockTime = 14
+            lighting.ShadowColor = Color3.fromRGB(12, 15, 20)
+
+            if lighting:FindFirstChild("SunRaysEffect") then
+                lighting.SunRaysEffect:Destroy()
+            end
+
+            -- Bloom
+            local bloom = Instance.new("BloomEffect")
+            bloom.Parent = lighting
+            bloom.Intensity = 0.25
+            bloom.Size = 32
+            bloom.Threshold = 0.9
+            shaderEffects.bloom = bloom
+
+            -- Color Correction
+            local colorCorrection = Instance.new("ColorCorrectionEffect")
+            colorCorrection.Parent = lighting
+            colorCorrection.Brightness = 0.05
+            colorCorrection.Contrast = 0.35
+            colorCorrection.Saturation = 0.1
+            colorCorrection.TintColor = Color3.fromRGB(255, 248, 235)
+            shaderEffects.colorCorrection = colorCorrection
+
+            -- Shadow Enhancer
+            local shadowEnhancer = Instance.new("ColorCorrectionEffect")
+            shadowEnhancer.Parent = lighting
+            shadowEnhancer.Brightness = -0.08
+            shadowEnhancer.Contrast = 0.45
+            shadowEnhancer.Saturation = -0.15
+            shadowEnhancer.TintColor = Color3.fromRGB(240, 240, 245)
+            shaderEffects.shadowEnhancer = shadowEnhancer
+
+            -- Depth of Field
+            local dof = Instance.new("DepthOfFieldEffect")
+            dof.Parent = lighting
+            dof.FarIntensity = 0.15
+            dof.FocusDistance = 35
+            dof.InFocusRadius = 25
+            dof.NearIntensity = 0.1
+            shaderEffects.dof = dof
+
+            -- Atmosphere
+            local atmosphere = Instance.new("Atmosphere")
+            atmosphere.Parent = lighting
+            atmosphere.Density = 0.35
+            atmosphere.Offset = 0.5
+            atmosphere.Color = Color3.fromRGB(170, 190, 220)
+            atmosphere.Decay = Color3.fromRGB(110, 130, 170)
+            atmosphere.Glare = 0.1
+            atmosphere.Haze = 0.15
+            shaderEffects.atmosphere = atmosphere
+
+            -- Fog
+            local fog = Instance.new("FogEffect")
+            fog.Parent = lighting
+            fog.Color = Color3.fromRGB(170, 180, 200)
+            fog.Density = 0.005
+            shaderEffects.fog = fog
+
+            -- Shadow Blur
+            local shadowMap = Instance.new("BlurEffect")
+            shadowMap.Parent = lighting
+            shadowMap.Size = 2
+            shaderEffects.shadowMap = shadowMap
+
+            -- Sun Rays
+            local sunRays = Instance.new("SunRaysEffect")
+            sunRays.Parent = lighting
+            sunRays.Intensity = 0.02
+            sunRays.Spread = 0.1
+            shaderEffects.sunRays = sunRays
+
+            -- Lights shadows
+            for _, light in pairs(lighting:GetChildren()) do
+                if light:IsA("Light") then
+                    light.Shadows = true
+                    if light:IsA("SpotLight") then
+                        light.Angle = 60
+                    end
+                end
+            end
+
+            -- Dynamic Time of Day
+            shaderEffects.timeOfDay = RunService.Heartbeat:Connect(function()
+                if shaderEnabled then
+                    local currentTime = lighting.ClockTime
+                    if currentTime >= 6 and currentTime <= 18 then
+                        lighting.Brightness = math.lerp(1.5, 2.0, (currentTime - 6) / 12)
+                        lighting.Ambient = Color3.fromRGB(
+                            math.floor(25 + (currentTime - 6) * 2),
+                            math.floor(28 + (currentTime - 6) * 2),
+                            math.floor(35 + (currentTime - 6) * 2)
+                        )
+                    else
+                        lighting.Brightness = 0.8
+                        lighting.Ambient = Color3.fromRGB(15, 18, 25)
+                    end
+                end
+            end)
+
+            shaderEnabled = true
+            shaderBtn.Text = "Disable Shader"
+            TweenService:Create(shaderBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255, 100, 100)}):Play()
+            TweenService:Create(shaderBtn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+        else
+            -- Disable
+            for _, effect in pairs(shaderEffects) do
+                if effect:IsA("RBXScriptConnection") then
+                    effect:Disconnect()
+                elseif effect and effect.Parent then
+                    effect:Destroy()
+                end
+            end
+            shaderEffects = {}
+
+            -- Reset lighting
+            lighting.Ambient = Color3.fromRGB(0.5, 0.5, 0.5)
+            lighting.Brightness = 1
+            lighting.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
+            lighting.ColorShift_Top = Color3.fromRGB(0, 0, 0)
+            lighting.EnvironmentDiffuseScale = 1
+            lighting.EnvironmentSpecularScale = 1
+            lighting.GlobalShadows = true
+            lighting.OutdoorAmbient = Color3.fromRGB(127.5, 127.5, 127.5)
+            lighting.ShadowSoftness = 0.1
+            lighting.ShadowColor = Color3.fromRGB(0, 0, 0)
+            lighting.GeographicLatitude = 41.73
+            lighting.ExposureCompensation = 0
+            lighting.ClockTime = 14
+
+            shaderEnabled = false
+            shaderBtn.Text = "Enable Shader"
+            TweenService:Create(shaderBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+            TweenService:Create(shaderBtn, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(0, 0, 0)}):Play()
+        end
+    end)
+
+    -- FPS Boost Button
+    local fpsBtn = Instance.new("TextButton")
+    fpsBtn.Size = UDim2.new(0.85,
