@@ -1,0 +1,343 @@
+--// Combined GUI Script (Telegram Popup + Shader + FPS Booster + FPS Display)
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+-- Main GUI
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.ResetOnSpawn = false
+gui.Name = "EnhancedGUI"
+
+----------------------------------------------------
+-- 1️⃣ TELEGRAM POPUP
+----------------------------------------------------
+local popup = Instance.new("Frame")
+popup.Size = UDim2.new(0, 0, 0, 0)
+popup.Position = UDim2.new(0.5, 0, 0.5, 0)
+popup.AnchorPoint = Vector2.new(0.5, 0.5)
+popup.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+popup.Active = true
+popup.Draggable = true
+popup.BorderSizePixel = 0
+popup.Parent = gui
+Instance.new("UICorner", popup).CornerRadius = UDim.new(0, 14)
+
+popup:TweenSize(UDim2.new(0, 360, 0, 220), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.5, true)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.Text = "Click The Link Below"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Parent = popup
+
+local linkBox = Instance.new("TextButton")
+linkBox.Size = UDim2.new(0.85, 0, 0, 45)
+linkBox.Position = UDim2.new(0.075, 0, 0.35, 0)
+linkBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+linkBox.TextColor3 = Color3.fromRGB(0, 102, 255)
+linkBox.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
+linkBox.Font = Enum.Font.GothamBold
+linkBox.TextSize = 18
+Instance.new("UICorner", linkBox).CornerRadius = UDim.new(0, 10)
+linkBox.Parent = popup
+
+local info = Instance.new("TextLabel")
+info.Size = UDim2.new(1, 0, 0, 30)
+info.Position = UDim2.new(0, 0, 0.63, 0)
+info.BackgroundTransparency = 1
+info.Text = "More Scripts On Telegram"
+info.Font = Enum.Font.Gotham
+info.TextSize = 16
+info.TextColor3 = Color3.fromRGB(220, 220, 220)
+info.Parent = popup
+
+local ok = Instance.new("TextButton")
+ok.Size = UDim2.new(0, 80, 0, 35)
+ok.Position = UDim2.new(0.5, -40, 1, -50)
+ok.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ok.TextColor3 = Color3.fromRGB(0, 0, 0)
+ok.Text = "OK"
+ok.Font = Enum.Font.GothamBold
+ok.TextSize = 16
+Instance.new("UICorner", ok).CornerRadius = UDim.new(0, 8)
+ok.Parent = popup
+
+linkBox.MouseButton1Click:Connect(function()
+	if setclipboard then
+		setclipboard("https://t.me/RBLX_SCRIPTS_MYANMAR")
+	elseif writeclipboard then
+		writeclipboard("https://t.me/RBLX_SCRIPTS_MYANMAR")
+	end
+	linkBox.Text = "Copied!"
+	task.wait(1.5)
+	linkBox.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
+end)
+
+----------------------------------------------------
+-- 2️⃣ SMALL ENHANCER WINDOW
+----------------------------------------------------
+ok.MouseButton1Click:Connect(function()
+	popup:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.4, true)
+	task.wait(0.4)
+	popup:Destroy()
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0, 260, 0, 180)
+	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	frame.AnchorPoint = Vector2.new(0.5, 0.5)
+	frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+	frame.Active = true
+	frame.Draggable = true
+	frame.BorderSizePixel = 0
+	frame.Parent = gui
+	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
+
+	frame:TweenSize(UDim2.new(0, 280, 0, 190), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.5, true)
+
+	local title2 = Instance.new("TextLabel")
+	title2.Size = UDim2.new(1, 0, 0, 30)
+	title2.BackgroundTransparency = 1
+	title2.Text = "Game Enhancer"
+	title2.Font = Enum.Font.GothamBold
+	title2.TextSize = 18
+	title2.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title2.Parent = frame
+
+	----------------------------------------------------
+	-- SHADER BUTTON (Toggle)
+	----------------------------------------------------
+	local shaderEnabled = false
+	local shaderBtn = Instance.new("TextButton")
+	shaderBtn.Size = UDim2.new(0.85, 0, 0, 45)
+	shaderBtn.Position = UDim2.new(0.075, 0, 0.3, 0)
+	shaderBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	shaderBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+	shaderBtn.Font = Enum.Font.GothamBold
+	shaderBtn.TextSize = 18
+	shaderBtn.Text = "Enable Shader"
+	Instance.new("UICorner", shaderBtn).CornerRadius = UDim.new(0, 10)
+	shaderBtn.Parent = frame
+
+	-- Store shader effects for toggling
+	local shaderEffects = {}
+
+	shaderBtn.MouseButton1Click:Connect(function()
+		if not shaderEnabled then
+			-- Enable Shader - Ultra Realistic Settings with Dynamic Shadows
+			local a = game.Lighting
+			
+			-- Ultra Realistic Lighting Setup
+			a.Ambient = Color3.fromRGB(25, 28, 35)  -- Cool, natural ambient for realistic shadow depth
+			a.Brightness = 1.8  -- Realistic brightness level
+			a.ColorShift_Bottom = Color3.fromRGB(8, 10, 15)  -- Deep shadow tones
+			a.ColorShift_Top = Color3.fromRGB(180, 200, 220)  -- Natural daylight sky
+			a.EnvironmentDiffuseScale = 0.6  -- Realistic light scattering
+			a.EnvironmentSpecularScale = 0.25  -- Subtle specular highlights
+			a.GlobalShadows = true
+			a.ShadowSoftness = 0.08  -- Sharp but natural shadows
+			a.OutdoorAmbient = Color3.fromRGB(90, 105, 125)  -- Realistic outdoor lighting
+			a.GeographicLatitude = 45.0  -- Temperate climate lighting
+			a.ExposureCompensation = 0.15  -- Natural exposure
+			a.ClockTime = 14  -- Afternoon for best shadow demonstration
+			
+			-- Advanced Shadow System
+			a.ShadowColor = Color3.fromRGB(12, 15, 20)  -- Deep, realistic shadow color
+			a.GlobalShadows = true
+			
+			-- Remove harsh effects
+			if a:FindFirstChild("SunRaysEffect") then
+				a.SunRaysEffect:Destroy()
+			end
+
+			-- Advanced Bloom with realistic light bleed
+			local bloom = Instance.new("BloomEffect", a)
+			bloom.Enabled = true
+			bloom.Intensity = 0.25  -- Subtle realistic bloom
+			bloom.Size = 32  -- Natural bloom size
+			bloom.Threshold = 0.9  -- Only very bright surfaces
+			shaderEffects.bloom = bloom
+
+			-- Realistic Color Grading
+			local colorCorrection = Instance.new("ColorCorrectionEffect", a)
+			colorCorrection.Brightness = 0.05
+			colorCorrection.Contrast = 0.35  -- Enhanced contrast for depth
+			colorCorrection.Saturation = 0.1  -- Natural color saturation
+			colorCorrection.TintColor = Color3.fromRGB(255, 248, 235)  -- Subtle golden hour tint
+			colorCorrection.Enabled = true
+			shaderEffects.colorCorrection = colorCorrection
+
+			-- Shadow Enhancement Layer
+			local shadowEnhancer = Instance.new("ColorCorrectionEffect", a)
+			shadowEnhancer.Brightness = -0.08  -- Darken for shadow emphasis
+			shadowEnhancer.Contrast = 0.45  -- High contrast for defined shadows
+			shadowEnhancer.Saturation = -0.15  -- Desaturated shadows look more natural
+			shadowEnhancer.TintColor = Color3.fromRGB(240, 240, 245)  -- Cool shadow tint
+			shadowEnhancer.Enabled = true
+			shaderEffects.shadowEnhancer = shadowEnhancer
+
+			-- Realistic Depth of Field
+			local dof = Instance.new("DepthOfFieldEffect", a)
+			dof.Enabled = true
+			dof.FarIntensity = 0.15  -- Noticeable but realistic far blur
+			dof.FocusDistance = 35.0  -- Medium focus distance
+			dof.InFocusRadius = 25.0  -- Realistic focus range
+			dof.NearIntensity = 0.1  -- Subtle near blur
+			shaderEffects.dof = dof
+
+			-- Volumetric Atmosphere
+			local atmosphere = Instance.new("Atmosphere", a)
+			atmosphere.Density = 0.35  -- Visible atmosphere
+			atmosphere.Offset = 0.5
+			atmosphere.Color = Color3.fromRGB(170, 190, 220)  -- Realistic sky color
+			atmosphere.Decay = Color3.fromRGB(110, 130, 170)  -- Natural light decay
+			atmosphere.Glare = 0.1  -- Subtle glare
+			atmosphere.Haze = 0.15  -- Light haze for depth
+			shaderEffects.atmosphere = atmosphere
+
+			-- Realistic Fog for depth perception
+			local fog = Instance.new("FogEffect", a)
+			fog.Enabled = true
+			fog.Color = Color3.fromRGB(170, 180, 200)
+			fog.Density = 0.005  -- Very subtle fog
+			shaderEffects.fog = fog
+
+			-- Dynamic Shadow Mapping
+			local shadowMap = Instance.new("BlurEffect", a)
+			shadowMap.Enabled = true
+			shadowMap.Size = 2  -- Subtle shadow softening
+			shaderEffects.shadowMap = shadowMap
+
+			-- Enhanced Light Rays (subtle)
+			local sunRays = Instance.new("SunRaysEffect", a)
+			sunRays.Enabled = true
+			sunRays.Intensity = 0.02  -- Very subtle light rays
+			sunRays.Spread = 0.1  -- Tight spread
+			shaderEffects.sunRays = sunRays
+
+			-- Ensure all lights cast proper shadows
+			for _, light in pairs(a:GetChildren()) do
+				if light:IsA("Light") then
+					light.Shadows = true
+					if light:IsA("SpotLight") then
+						light.Angle = 60  -- Realistic spotlight angle
+					end
+				end
+			end
+
+			-- Dynamic Time of Day System
+			shaderEffects.timeOfDay = RunService.Heartbeat:Connect(function()
+				if shaderEnabled then
+					local currentTime = a.ClockTime
+					-- Adjust lighting based on time of day
+					if currentTime >= 6 and currentTime <= 18 then  -- Daytime
+						a.Brightness = math.lerp(1.5, 2.0, (currentTime - 6) / 12)
+						a.Ambient = Color3.fromRGB(
+							math.floor(25 + (currentTime - 6) * 2),
+							math.floor(28 + (currentTime - 6) * 2),
+							math.floor(35 + (currentTime - 6) * 2)
+						)
+					else  -- Nighttime
+						a.Brightness = 0.8
+						a.Ambient = Color3.fromRGB(15, 18, 25)
+					end
+				end
+			end)
+
+			shaderEnabled = true
+			shaderBtn.Text = "Disable Shader"
+			TweenService:Create(shaderBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255, 100, 100), TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+		else
+			-- Disable Shader
+			for _, effect in pairs(shaderEffects) do
+				if effect and effect.Parent then
+					if effect.Disconnect then
+						effect:Disconnect()  -- Disconnect connections
+					else
+						effect:Destroy()  -- Destroy instances
+					end
+				end
+			end
+			shaderEffects = {}
+			
+			-- Reset lighting to default
+			local a = game.Lighting
+			a.Ambient = Color3.fromRGB(0.5, 0.5, 0.5)
+			a.Brightness = 1
+			a.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
+			a.ColorShift_Top = Color3.fromRGB(0, 0, 0)
+			a.EnvironmentDiffuseScale = 1
+			a.EnvironmentSpecularScale = 1
+			a.GlobalShadows = true
+			a.OutdoorAmbient = Color3.fromRGB(127.5, 127.5, 127.5)
+			a.ShadowSoftness = 0.1
+			a.ShadowColor = Color3.fromRGB(0, 0, 0)
+			a.GeographicLatitude = 41.73
+			a.ExposureCompensation = 0
+			a.ClockTime = 14
+			
+			shaderEnabled = false
+			shaderBtn.Text = "Enable Shader"
+			TweenService:Create(shaderBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255,255,255), TextColor3 = Color3.fromRGB(0,0,0)}):Play()
+		end
+	end)
+
+	----------------------------------------------------
+	-- FPS BOOST BUTTON (no ON/OFF)
+	----------------------------------------------------
+	local fpsBtn = Instance.new("TextButton")
+	fpsBtn.Size = UDim2.new(0.85, 0, 0, 45)
+	fpsBtn.Position = UDim2.new(0.075, 0, 0.6, 0)
+	fpsBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	fpsBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+	fpsBtn.Font = Enum.Font.GothamBold
+	fpsBtn.TextSize = 18
+	fpsBtn.Text = "Boost FPS"
+	Instance.new("UICorner", fpsBtn).CornerRadius = UDim.new(0, 10)
+	fpsBtn.Parent = frame
+
+	fpsBtn.MouseButton1Click:Connect(function()
+		for _, v in pairs(workspace:GetDescendants()) do
+			if v:IsA("BasePart") then v.Material = Enum.Material.SmoothPlastic end
+			if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+		end
+		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+		-- Keep basic shadows for visual quality
+		game.Lighting.GlobalShadows = true
+		game.Lighting.FogEnd = 100000
+
+		fpsBtn.Text = "Boosted!"
+		TweenService:Create(fpsBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(0, 200, 100), TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+		task.wait(1.5)
+		fpsBtn.Text = "Boost FPS"
+		TweenService:Create(fpsBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255,255,255), TextColor3 = Color3.fromRGB(0,0,0)}):Play()
+	end)
+
+	----------------------------------------------------
+	-- 📊 FPS COUNTER
+	----------------------------------------------------
+	local fpsLabel = Instance.new("TextLabel")
+	fpsLabel.Size = UDim2.new(1, 0, 0, 30)
+	fpsLabel.Position = UDim2.new(0, 0, 0.85, 0)
+	fpsLabel.BackgroundTransparency = 1
+	fpsLabel.Font = Enum.Font.GothamBold
+	fpsLabel.TextSize = 16
+	fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 120)
+	fpsLabel.Text = "FPS: ..."
+	fpsLabel.Parent = frame
+
+	-- FPS Update Loop
+	local last = tick()
+	local frames = 0
+	RunService.RenderStepped:Connect(function()
+		frames += 1
+		if tick() - last >= 1 then
+			fpsLabel.Text = "FPS: " .. tostring(frames)
+			frames = 0
+			last = tick()
+		end
+	end)
+end)
