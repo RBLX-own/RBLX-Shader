@@ -1,4 +1,4 @@
-local IMAGE_ID = "rbxassetid://0"  -- <-- PASTE YOUR IMAGE ID HERE!
+local IMAGE_ID = "rbxassetid://121158130775447"  -- <-- PASTE YOUR IMAGE ID HERE!
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
