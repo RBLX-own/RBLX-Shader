@@ -1,26 +1,24 @@
---[[
-IMPORTANT: UPLOAD THE IMAGE FIRST!
-1. Download the image from: https://drive.google.com/file/d/1sFBzKFh-XqUg21-IgqRFz3IrNtK8tA_b/view?usp=drivesdk
-2. Go to Roblox.com > Create > Images > Upload the image.
-3. Copy the Asset ID (rbxassetid://XXXXXXXXX) from the image properties.
-4. Replace the IMAGE_ID below with your ID.
---]]
-
-local IMAGE_ID = "rbxassetid://121158130775447"  -- <-- PASTE YOUR IMAGE ID HERE!
+local IMAGE_ID = "rbxassetid://121158130775447"  -- ← Replace with your uploaded asset ID
 
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
 
--- Main GUI
+local player = Players.LocalPlayer
 local gui = Instance.new("ScreenGui")
-gui.Name = "EnhancedGUI"
+gui.Name = "ModernEnhancer"
 gui.ResetOnSpawn = false
-gui.Parent = player.PlayerGui
+gui.Parent = player:WaitForChild("PlayerGui")
 
--- 0️⃣ DRAGGABLE SQUIRCLE ICON (Always created first, hidden initially)
+-- Sounds
+local clickSound = Instance.new("Sound", gui); clickSound.SoundId = "rbxassetid://142376088"; clickSound.Volume = 0.5
+local hoverSound = Instance.new("Sound", gui); hoverSound.SoundId = "rbxassetid://258705265"; hoverSound.Volume = 0.3
+local openSound  = Instance.new("Sound", gui); openSound.SoundId  = "rbxassetid://1070980695"; openSound.Volume = 0.4
+local closeSound = Instance.new("Sound", gui); closeSound.SoundId = "rbxassetid://1070980574"; closeSound.Volume = 0.4
+
+-- ==================== ICON (Floating Squircle) ====================
 local icon = Instance.new("ImageButton")
 icon.Name = "RBLXIcon"
 icon.Size = UDim2.new(0, 64, 0, 64)
@@ -31,39 +29,28 @@ icon.BackgroundTransparency = 0.15
 icon.BorderSizePixel = 0
 icon.Image = IMAGE_ID
 icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
-icon.ImageTransparency = 0
 icon.ZIndex = 10
 icon.Parent = gui
 
-local iconCorner = Instance.new("UICorner")
-iconCorner.CornerRadius = UDim.new(0, 22)
-iconCorner.Parent = icon
-
-local iconGradient = Instance.new("UIGradient")
-iconGradient.Color = ColorSequence.new({
+local iconCorner = Instance.new("UICorner", icon); iconCorner.CornerRadius = UDim.new(0, 22)
+local iconGradient = Instance.new("UIGradient", icon)
+iconGradient.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 200, 255)),
     ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 150, 255))
-})
+}
 iconGradient.Rotation = 45
-iconGradient.Parent = icon
-
-local iconStroke = Instance.new("UIStroke")
+local iconStroke = Instance.new("UIStroke", icon)
 iconStroke.Color = Color3.fromRGB(100, 200, 255)
 iconStroke.Thickness = 2.5
 iconStroke.Transparency = 0.4
-iconStroke.Parent = icon
 
--- Icon Animations
-local pulseTween = TweenService:Create(icon, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0, 72, 0, 72)})
-local hoverTween = TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 78, 0, 78), Rotation = 360, ImageTransparency = 0.05})
-local leaveTween = TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 64, 0, 64), Rotation = 0, ImageTransparency = 0})
-local clickTween1 = TweenService:Create(icon, TweenInfo.new(0.12, Enum.EasingStyle.Quart), {Size = UDim2.new(0, 82, 0, 82), ImageTransparency = 0.4})
-local clickTween2 = TweenService:Create(icon, TweenInfo.new(0.12, Enum.EasingStyle.Back), {Size = UDim2.new(0, 64, 0, 64), ImageTransparency = 0})
+-- Icon tweens
+local hoverTween = TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(0,78,0,78), Rotation = 360})
+local leaveTween = TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(0,64,0,64), Rotation = 0})
+local pulseTween = TweenService:Create(icon, TweenInfo.new(1.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0,72,0,72)})
 
--- Custom Draggable with Snap & Animations
-local dragging = false
-local dragStart = nil
-local startPos = nil
+-- Dragging
+local dragging, dragStart, startPos = false, nil, nil
 local dragDistance = 0
 
 icon.InputBegan:Connect(function(input)
@@ -72,16 +59,16 @@ icon.InputBegan:Connect(function(input)
         dragStart = input.Position
         startPos = icon.Position
         dragDistance = 0
-        -- Drag start animation
-        TweenService:Create(icon, TweenInfo.new(0.15), {Size = UDim2.new(0, 58, 0, 58)}):Play()
+        TweenService:Create(icon, TweenInfo.new(0.15), {Size = UDim2.new(0,58,0,58)}):Play()
         TweenService:Create(iconStroke, TweenInfo.new(0.15), {Thickness = 1.5}):Play()
+        clickSound:Play()
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
-        dragDistance = math.max(dragDistance, (input.Position - dragStart).Magnitude)
+        dragDistance = math.max(dragDistance, delta.Magnitude)
         icon.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
@@ -89,593 +76,283 @@ end)
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
         dragging = false
-        -- Drag end animation
-        TweenService:Create(icon, TweenInfo.new(0.25, Enum.EasingStyle.Back), {Size = UDim2.new(0, 64, 0, 64)}):Play()
+        TweenService:Create(icon, TweenInfo.new(0.25, Enum.EasingStyle.Back), {Size = UDim2.new(0,64,0,64)}):Play()
         TweenService:Create(iconStroke, TweenInfo.new(0.25), {Thickness = 2.5}):Play()
-        
-        -- Snap to edges
-        local camera = workspace.CurrentCamera
-        local screenSize = camera.ViewportSize
+
+        -- Snap to screen edges
+        local cam = workspace.CurrentCamera
+        local ss = cam.ViewportSize
         local absPos = icon.AbsolutePosition
         local absSize = icon.AbsoluteSize
         local margin = 20
-        
-        local targetX = absPos.X
-        if absPos.X < screenSize.X * 0.3 then
-            targetX = margin
-        elseif absPos.X + absSize.X > screenSize.X * 0.7 then
-            targetX = screenSize.X - absSize.X - margin
-        end
-        
-        local targetY = absPos.Y
-        if absPos.Y < screenSize.Y * 0.3 then
-            targetY = margin
-        elseif absPos.Y + absSize.Y > screenSize.Y * 0.7 then
-            targetY = screenSize.Y - absSize.Y - margin
-        end
-        
-        TweenService:Create(icon, TweenInfo.new(0.4, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0, targetX, 0, targetY)
-        }):Play()
-        
-        -- Toggle if it was a click (small drag distance)
+        local tx = absPos.X < ss.X*0.3 and margin or (absPos.X + absSize.X > ss.X*0.7 and ss.X - absSize.X - margin or absPos.X)
+        local ty = absPos.Y < ss.Y*0.3 and margin or (absPos.Y + absSize.Y > ss.Y*0.7 and ss.Y - absSize.Y - margin or absPos.Y)
+
+        TweenService:Create(icon, TweenInfo.new(0.45, Enum.EasingStyle.Back), {Position = UDim2.new(0, tx, 0, ty)}):Play()
+
         if dragDistance < 12 then
-            -- Trigger toggle (defined later)
             toggleEnhancer()
         end
     end
 end)
 
--- Hover animations
-icon.MouseEnter:Connect(function()
-    if not dragging then
-        hoverTween:Play()
-        TweenService:Create(iconStroke, TweenInfo.new(0.3), {Thickness = 4, Transparency = 0, Color = Color3.fromRGB(150, 255, 255)}):Play()
-        TweenService:Create(iconGradient, TweenInfo.new(0.3), {Rotation = 135}):Play()
-    end
-end)
-
-icon.MouseLeave:Connect(function()
-    if not dragging then
-        leaveTween:Play()
-        TweenService:Create(iconStroke, TweenInfo.new(0.3), {Thickness = 2.5, Transparency = 0.4, Color = Color3.fromRGB(100, 200, 255)}):Play()
-        TweenService:Create(iconGradient, TweenInfo.new(0.3), {Rotation = 45}):Play()
-    end
-end)
-
--- Pulse loop
+icon.MouseEnter:Connect(function() if not dragging then hoverTween:Play() hoverSound:Play() end end)
+icon.MouseLeave:Connect(function() if not dragging then leaveTween:Play() end end)
 pulseTween:Play()
 
--- Enhancer variables
-local enhancer = nil
-local isOpen = false
+-- ==================== ENHANCER FUNCTIONS ====================
+local enhancer, isOpen = nil, false
 
--- Function to toggle enhancer
+function showIcon()
+    icon.Size = UDim2.new(0,0,0,0)
+    icon.Visible = true
+    TweenService:Create(icon, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0,64,0,64)}):Play()
+    openSound:Play()
+end
+
 function toggleEnhancer()
     if not isOpen then
-        -- Open enhancer
-        if not enhancer then
-            createEnhancer()
-        end
+        if not enhancer then createEnhancer() end
         icon.Visible = false
         enhancer.Visible = true
-        local tweenInfoOpen = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-        enhancer:TweenSize(UDim2.new(0, 300, 0, 210), tweenInfoOpen, true)
+        enhancer.Size = UDim2.new(0,0,0,0)
+        TweenService:Create(enhancer, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0,320,0,240)}):Play()
+        openSound:Play()
         isOpen = true
     else
-        -- Close enhancer
-        local tweenInfoClose = TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In)
-        enhancer:TweenSize(UDim2.new(0, 0, 0, 0), tweenInfoClose, true)
+        TweenService:Create(enhancer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)}):Play()
+        closeSound:Play()
         task.wait(0.4)
         enhancer.Visible = false
         icon.Visible = true
-        -- Pulse icon on return
         pulseTween:Play()
         isOpen = false
     end
 end
 
--- Function to create enhancer (main script)
 function createEnhancer()
-    enhancer = Instance.new("Frame")
+    enhancer = Instance.new("Frame", gui)
     enhancer.Name = "EnhancerFrame"
-    enhancer.Size = UDim2.new(0, 0, 0, 0)
-    enhancer.Position = UDim2.new(0.5, 0, 0.5, 0)
-    enhancer.AnchorPoint = Vector2.new(0.5, 0.5)
-    enhancer.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-    enhancer.Active = true
-    enhancer.Draggable = true
+    enhancer.Size = UDim2.new(0,320,0,240)
+    enhancer.Position = UDim2.new(0.5,0,0.5,0)
+    enhancer.AnchorPoint = Vector2.new(0.5,0.5)
+    enhancer.BackgroundColor3 = Color3.fromRGB(18,18,22)
     enhancer.BorderSizePixel = 0
     enhancer.ZIndex = 5
     enhancer.Visible = false
-    enhancer.Parent = gui
-    
-    local frameCorner = Instance.new("UICorner")
-    frameCorner.CornerRadius = UDim.new(0, 16)
-    frameCorner.Parent = enhancer
-    
-    local frameGradient = Instance.new("UIGradient")
-    frameGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 30)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 10))
-    })
-    frameGradient.Rotation = 90
-    frameGradient.Parent = enhancer
-    
-    local frameStroke = Instance.new("UIStroke")
-    frameStroke.Color = Color3.fromRGB(50, 50, 50)
-    frameStroke.Thickness = 1
-    frameStroke.Transparency = 0.5
-    frameStroke.Parent = enhancer
-    
-    -- Title Bar
-    local titleBar = Instance.new("Frame")
-    titleBar.Size = UDim2.new(1, 0, 0, 45)
-    titleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    titleBar.BorderSizePixel = 0
-    titleBar.Parent = enhancer
-    
-    local titleBarCorner = Instance.new("UICorner")
-    titleBarCorner.CornerRadius = UDim.new(0, 16)
-    titleBarCorner.Parent = titleBar
-    
-    local titleBarGradient = Instance.new("UIGradient")
-    titleBarGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 40)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20))
-    })
-    titleBarGradient.Rotation = 90
-    titleBarGradient.Parent = titleBar
-    
-    local titleBarStroke = Instance.new("UIStroke")
-    titleBarStroke.Color = Color3.fromRGB(60, 60, 60)
-    titleBarStroke.Thickness = 1
-    titleBarStroke.Parent = titleBar
-    
-    local title2 = Instance.new("TextLabel")
-    title2.Size = UDim2.new(0.7, 0, 1, 0)
-    title2.Position = UDim2.new(0, 15, 0, 0)
-    title2.BackgroundTransparency = 1
-    title2.Text = "🚀 Game Enhancer"
-    title2.Font = Enum.Font.GothamBold
-    title2.TextSize = 18
-    title2.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title2.TextXAlignment = Enum.TextXAlignment.Left
-    title2.Parent = titleBar
-    
-    -- Minimize Button
-    local minimizeBtn = Instance.new("TextButton")
-    minimizeBtn.Size = UDim2.new(0, 40, 0, 35)
-    minimizeBtn.Position = UDim2.new(1, -85, 0.5, -17.5)
-    minimizeBtn.AnchorPoint = Vector2.new(1, 0.5)
-    minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-    minimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-    minimizeBtn.Text = "−"
-    minimizeBtn.Font = Enum.Font.GothamBold
-    minimizeBtn.TextSize = 20
-    minimizeBtn.Parent = titleBar
-    local minCorner = Instance.new("UICorner", minimizeBtn)
-    minCorner.CornerRadius = UDim.new(0, 8)
-    
-    -- Close Button
-    local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, 40, 0, 35)
-    closeBtn.Position = UDim2.new(1, -40, 0.5, -17.5)
-    closeBtn.AnchorPoint = Vector2.new(1, 0.5)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    enhancer.Active = true
+    enhancer.Draggable = true
+
+    local frameCorner = Instance.new("UICorner", enhancer); frameCorner.CornerRadius = UDim.new(0,18)
+    local frameStroke = Instance.new("UIStroke", enhancer); frameStroke.Color = Color3.fromRGB(80,200,255); frameStroke.Thickness = 1.5; frameStroke.Transparency = 0.6
+
+    -- Title bar
+    local titleBar = Instance.new("Frame", enhancer)
+    titleBar.Size = UDim2.new(1,0,0,48)
+    titleBar.BackgroundColor3 = Color3.fromRGB(25,25,30)
+    local tbCorner = Instance.new("UICorner", titleBar); tbCorner.CornerRadius = UDim.new(0,18)
+    local title = Instance.new("TextLabel", titleBar)
+    title.Size = UDim2.new(1,-90,1,0)
+    title.Position = UDim2.new(0,20,0,0)
+    title.BackgroundTransparency = 1
+    title.Text = "🚀 Game Enhancer"
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 20
+    title.TextColor3 = Color3.fromRGB(255,255,255)
+    title.TextXAlignment = Enum.TextXAlignment.Left
+
+    local closeBtn = Instance.new("TextButton", titleBar)
+    closeBtn.Size = UDim2.new(0,40,0,40)
+    closeBtn.Position = UDim2.new(1,-50,0.5,-20)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(255,80,80)
     closeBtn.Text = "✕"
+    closeBtn.TextColor3 = Color3.new(1,1,1)
     closeBtn.Font = Enum.Font.GothamBold
-    closeBtn.TextSize = 18
-    closeBtn.Parent = titleBar
-    local closeCorner = Instance.new("UICorner", closeBtn)
-    closeCorner.CornerRadius = UDim.new(0, 8)
-    
-    -- Shader Toggle
+    closeBtn.TextSize = 22
+    local cbCorner = Instance.new("UICorner", closeBtn); cbCorner.CornerRadius = UDim.new(0,10)
+
+    -- Buttons
+    local function createButton(text, posY, callback)
+        local btn = Instance.new("TextButton", enhancer)
+        btn.Size = UDim2.new(0.9,0,0,55)
+        btn.Position = UDim2.new(0.05,0,posY,0)
+        btn.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        btn.TextColor3 = Color3.fromRGB(20,20,20)
+        btn.Text = text
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 18
+        local btnCorner = Instance.new("UICorner", btn); btnCorner.CornerRadius = UDim.new(0,14)
+        local btnStroke = Instance.new("UIStroke", btn); btnStroke.Color = Color3.fromRGB(100,200,255); btnStroke.Thickness = 2
+        btn.MouseButton1Click:Connect(function()
+            clickSound:Play()
+            callback(btn)
+        end)
+        btn.MouseEnter:Connect(function() hoverSound:Play(); TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size + UDim2.new(0,8,0,4)}):Play() end)
+        btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size - UDim2.new(0,8,0,4)}):Play() end)
+        return btn
+    end
+
+    -- Shader button (lighter version)
     local shaderEnabled = false
     local shaderEffects = {}
-    local shaderBtn = Instance.new("TextButton")
-    shaderBtn.Size = UDim2.new(0.88, 0, 0, 50)
-    shaderBtn.Position = UDim2.new(0.06, 0, 0.28, 0)
-    shaderBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    shaderBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-    shaderBtn.Font = Enum.Font.GothamBold
-    shaderBtn.TextSize = 16
-    shaderBtn.Text = "🌟 Enable Shader"
-    shaderBtn.Parent = enhancer
-    local shaderCorner = Instance.new("UICorner", shaderBtn)
-    shaderCorner.CornerRadius = UDim.new(0, 12)
-    
-    local shaderGradient = Instance.new("UIGradient")
-    shaderGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 220, 220))
-    })
-    shaderGradient.Parent = shaderBtn
-    
-    shaderBtn.MouseButton1Click:Connect(function()
-        -- Toggle shader (same as original, ultra realistic)
-        local a = game.Lighting
+    local shaderBtn = createButton("🌟 Enable Shader", 0.25, function(btn)
         if not shaderEnabled then
-            -- Enable (original code here)
-            a.Ambient = Color3.fromRGB(25, 28, 35)
-            a.Brightness = 1.8
-            a.ColorShift_Bottom = Color3.fromRGB(8, 10, 15)
-            a.ColorShift_Top = Color3.fromRGB(180, 200, 220)
-            a.EnvironmentDiffuseScale = 0.6
-            a.EnvironmentSpecularScale = 0.25
-            a.GlobalShadows = true
-            a.ShadowSoftness = 0.08
-            a.OutdoorAmbient = Color3.fromRGB(90, 105, 125)
-            a.GeographicLatitude = 45.0
-            a.ExposureCompensation = 0.15
-            a.ClockTime = 14
-            a.ShadowColor = Color3.fromRGB(12, 15, 20)
-            
-            if a:FindFirstChild("SunRaysEffect") then a.SunRaysEffect:Destroy() end
-            
-            local bloom = Instance.new("BloomEffect", a)
-            bloom.Intensity = 0.25
-            bloom.Size = 32
-            bloom.Threshold = 0.9
-            bloom.Enabled = true
-            shaderEffects.bloom = bloom
-            
-            local colorCorrection = Instance.new("ColorCorrectionEffect", a)
-            colorCorrection.Brightness = 0.05
-            colorCorrection.Contrast = 0.35
-            colorCorrection.Saturation = 0.1
-            colorCorrection.TintColor = Color3.fromRGB(255, 248, 235)
-            colorCorrection.Enabled = true
-            shaderEffects.colorCorrection = colorCorrection
-            
-            local shadowEnhancer = Instance.new("ColorCorrectionEffect", a)
-            shadowEnhancer.Brightness = -0.08
-            shadowEnhancer.Contrast = 0.45
-            shadowEnhancer.Saturation = -0.15
-            shadowEnhancer.TintColor = Color3.fromRGB(240, 240, 245)
-            shadowEnhancer.Enabled = true
-            shaderEffects.shadowEnhancer = shadowEnhancer
-            
-            local dof = Instance.new("DepthOfFieldEffect", a)
-            dof.FarIntensity = 0.15
-            dof.FocusDistance = 35.0
-            dof.InFocusRadius = 25.0
-            dof.NearIntensity = 0.1
-            dof.Enabled = true
-            shaderEffects.dof = dof
-            
-            local atmosphere = Instance.new("Atmosphere", a)
-            atmosphere.Density = 0.35
-            atmosphere.Offset = 0.5
-            atmosphere.Color = Color3.fromRGB(170, 190, 220)
-            atmosphere.Decay = Color3.fromRGB(110, 130, 170)
-            atmosphere.Glare = 0.1
-            atmosphere.Haze = 0.15
-            shaderEffects.atmosphere = atmosphere
-            
-            local fog = Instance.new("FogEffect", a)
-            fog.Color = Color3.fromRGB(170, 180, 200)
-            fog.Density = 0.005
-            fog.Enabled = true
-            shaderEffects.fog = fog
-            
-            local shadowMap = Instance.new("BlurEffect", a)
-            shadowMap.Size = 2
-            shadowMap.Enabled = true
-            shaderEffects.shadowMap = shadowMap
-            
-            local sunRays = Instance.new("SunRaysEffect", a)
-            sunRays.Intensity = 0.02
-            sunRays.Spread = 0.1
-            sunRays.Enabled = true
-            shaderEffects.sunRays = sunRays
-            
-            -- Lights
-            for _, light in pairs(a:GetChildren()) do
-                if light:IsA("Light") then
-                    light.Shadows = true
-                    if light:IsA("SpotLight") then light.Angle = 60 end
-                end
-            end
-            
-            -- Dynamic TOD
-            shaderEffects.timeOfDay = RunService.Heartbeat:Connect(function()
-                if shaderEnabled then
-                    local currentTime = a.ClockTime
-                    if currentTime >= 6 and currentTime <= 18 then
-                        a.Brightness = math.lerp(1.5, 2.0, (currentTime - 6) / 12)
-                        a.Ambient = Color3.fromRGB(math.floor(25 + (currentTime - 6)*2), math.floor(28 + (currentTime - 6)*2), math.floor(35 + (currentTime - 6)*2))
-                    else
-                        a.Brightness = 0.8
-                        a.Ambient = Color3.fromRGB(15, 18, 25)
-                    end
-                end
-            end)
-            
+            local l = Lighting
+            l.Ambient = Color3.fromRGB(35,40,55)
+            l.Brightness = 1.6
+            l.OutdoorAmbient = Color3.fromRGB(100,115,140)
+            l.GlobalShadows = true
+
+            local bloom = Instance.new("BloomEffect", l); bloom.Intensity = 0.35; bloom.Size = 28; bloom.Threshold = 1
+            local cc = Instance.new("ColorCorrectionEffect", l); cc.Brightness = 0.08; cc.Contrast = 0.3; cc.Saturation = 0.2; cc.TintColor = Color3.fromRGB(245,248,255)
+            table.insert(shaderEffects, bloom); table.insert(shaderEffects, cc)
+
             shaderEnabled = true
-            shaderBtn.Text = "🌟 Disable Shader"
-            TweenService:Create(shaderBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255, 100, 100), TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+            btn.Text = "🌟 Disable Shader"
+            TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255,90,90), TextColor3 = Color3.new(1,1,1)}):Play()
         else
-            -- Disable
-            for _, effect in pairs(shaderEffects) do
-                if typeof(effect) == "RBXScriptConnection" then
-                    effect:Disconnect()
-                elseif effect and effect.Parent then
-                    effect:Destroy()
-                end
-            end
+            for _, ef in shaderEffects do pcall(function() ef:Destroy() end) end
             shaderEffects = {}
-            
-            -- Reset lighting
-            a.Ambient = Color3.fromRGB(0.5, 0.5, 0.5)
-            a.Brightness = 1
-            a.ColorShift_Bottom = Color3.fromRGB(0,0,0)
-            a.ColorShift_Top = Color3.fromRGB(0,0,0)
-            a.EnvironmentDiffuseScale = 1
-            a.EnvironmentSpecularScale = 1
-            a.GlobalShadows = true
-            a.OutdoorAmbient = Color3.fromRGB(127.5,127.5,127.5)
-            a.ShadowSoftness = 0.1
-            a.ShadowColor = Color3.fromRGB(0,0,0)
-            a.GeographicLatitude = 41.73
-            a.ExposureCompensation = 0
-            a.ClockTime = 14
-            
+            Lighting.Ambient = Color3.fromRGB(70,70,70)
+            Lighting.Brightness = 1
             shaderEnabled = false
-            shaderBtn.Text = "🌟 Enable Shader"
-            TweenService:Create(shaderBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255,255,255), TextColor3 = Color3.fromRGB(0,0,0)}):Play()
+            btn.Text = "🌟 Enable Shader"
+            TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.new(1,1,1), TextColor3 = Color3.fromRGB(20,20,20)}):Play()
         end
     end)
 
--- FPS Boost Button
-local fpsBtn = Instance.new("TextButton")
-fpsBtn.Size = UDim2.new(0.88, 0, 0, 50)
-fpsBtn.Position = UDim2.new(0.06, 0, 0.55, 0)
-fpsBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-fpsBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-fpsBtn.Font = Enum.Font.GothamBold
-fpsBtn.TextSize = 16
-fpsBtn.Text = "⚡ Boost FPS"
-fpsBtn.Parent = enhancer
-local fpsCorner = Instance.new("UICorner", fpsBtn)
-fpsCorner.CornerRadius = UDim.new(0, 12)
-
-local fpsGradient = Instance.new("UIGradient")
-fpsGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 220, 220))
-})
-fpsGradient.Parent = fpsBtn
-
-fpsBtn.MouseButton1Click:Connect(function()
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("BasePart") then v.Material = Enum.Material.SmoothPlastic end
-        if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
-    end
-    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-    game.Lighting.GlobalShadows = true
-    game.Lighting.FogEnd = 100000
-    
-    fpsBtn.Text = "Boosted! ✅"
-    TweenService:Create(fpsBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(0, 255, 100), TextColor3 = Color3.fromRGB(0,0,0)}):Play()
-    task.wait(1.8)
-    fpsBtn.Text = "⚡ Boost FPS"
-    TweenService:Create(fpsBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255,255,255), TextColor3 = Color3.fromRGB(0,0,0)}):Play()
-end)
-
--- FPS Display
-local fpsLabel = Instance.new("TextLabel")
-fpsLabel.Size = UDim2.new(0.88, 0, 0, 35)
-fpsLabel.Position = UDim2.new(0.06, 0, 0.82, 0)
-fpsLabel.BackgroundTransparency = 1
-fpsLabel.Font = Enum.Font.GothamBold
-fpsLabel.TextSize = 18
-fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
-fpsLabel.Text = "FPS: Calculating..."
-fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
-fpsLabel.Parent = enhancer
-
-local lastTime = tick()
-local frames = 0
-RunService.RenderStepped:Connect(function()
-    frames = frames + 1
-    if tick() - lastTime >= 1 then
-        fpsLabel.Text = "FPS: " .. math.floor(frames)
-        frames = 0
-        lastTime = tick()
-    end
-end)
-
--- Title bar buttons
-minimizeBtn.MouseButton1Click:Connect(function()
-    toggleEnhancer()  -- Reuse toggle to minimize
-end)
-
-closeBtn.MouseButton1Click:Connect(function()
-    if enhancer then
-        enhancer:TweenSize(UDim2.new(0, 0, 0, 0), TweenInfo.new(0.3), true)
-        task.wait(0.3)
-    end
-    gui:Destroy()
-end)
-
--- Hover effects for buttons
-for _, btn in pairs({shaderBtn, fpsBtn, minimizeBtn, closeBtn}) do
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size + UDim2.new(0, 4, 0, 2), BackgroundColor3 = btn.BackgroundColor3:lerp(Color3.fromRGB(200, 200, 200), 0.2)}):Play()
+    -- FPS boost (safer)
+    local fpsBtn = createButton("⚡ Boost FPS", 0.52, function(btn)
+        for _, v in workspace:GetDescendants() do
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+        end
+        Lighting.GlobalShadows = false
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        btn.Text = "Boosted! ✅"
+        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(0,255,120)}):Play()
+        task.wait(1.8)
+        btn.Text = "⚡ Boost FPS"
+        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.new(1,1,1)}):Play()
     end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size - UDim2.new(0, 4, 0, 2), BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+
+    -- FPS counter
+    local fpsLabel = Instance.new("TextLabel", enhancer)
+    fpsLabel.Size = UDim2.new(0.9,0,0,35)
+    fpsLabel.Position = UDim2.new(0.05,0,0.78,0)
+    fpsLabel.BackgroundTransparency = 1
+    fpsLabel.TextColor3 = Color3.fromRGB(0,255,180)
+    fpsLabel.Font = Enum.Font.GothamBold
+    fpsLabel.TextSize = 20
+    fpsLabel.Text = "FPS: --"
+    local last = tick() local frames = 0
+    RunService.RenderStepped:Connect(function()
+        frames += 1
+        if tick() - last >= 1 then
+            fpsLabel.Text = "FPS: " .. frames
+            frames = 0
+            last = tick()
+        end
+    end)
+
+    -- Close button
+    closeBtn.MouseButton1Click:Connect(function()
+        clickSound:Play()
+        toggleEnhancer()
     end)
 end
-end
 
--- 1️⃣ TELEGRAM POPUP (Only if not seen)
-local seenTelegram = gui:FindFirstChild("SeenTelegram")
-if not seenTelegram then
-    local popup = Instance.new("Frame")
-    popup.Size = UDim2.new(0, 360, 0, 240)
-    popup.Position = UDim2.new(0.5, 0, 0.5, 0)
-    popup.AnchorPoint = Vector2.new(0.5, 0.5)
-    popup.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    popup.BackgroundTransparency = 0.3
+-- ==================== TELEGRAM POPUP (Fixed) ====================
+if not gui:FindFirstChild("SeenTelegram") then
+    local popup = Instance.new("Frame", gui)
+    popup.Size = UDim2.new(0,380,0,260)
+    popup.Position = UDim2.new(0.5,0,0.5,0)
+    popup.AnchorPoint = Vector2.new(0.5,0.5)
+    popup.BackgroundColor3 = Color3.fromRGB(15,15,20)
+    popup.BackgroundTransparency = 0.25
+    popup.ZIndex = 20
     popup.Active = true
     popup.Draggable = true
-    popup.BorderSizePixel = 0
-    popup.ZIndex = 15
-    popup.Parent = gui
-    
-    local popupCorner = Instance.new("UICorner")
-    popupCorner.CornerRadius = UDim.new(0, 16)
-    popupCorner.Parent = popup
-    
-    local popupGradient = Instance.new("UIGradient")
-    popupGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 20)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
-    })
-    popupGradient.Rotation = 90
-    popupGradient.Parent = popup
-    
-    -- Background Photo
-    local bgImage = Instance.new("ImageLabel")
-    bgImage.Size = UDim2.new(1, 0, 1, 0)
-    bgImage.Position = UDim2.new(0, 0, 0, 0)
+
+    local pCorner = Instance.new("UICorner", popup); pCorner.CornerRadius = UDim.new(0,20)
+
+    -- Background image (behind everything)
+    local bgImage = Instance.new("ImageLabel", popup)
+    bgImage.Size = UDim2.new(1,0,1,0)
     bgImage.BackgroundTransparency = 1
     bgImage.Image = IMAGE_ID
+    bgImage.ImageTransparency = 0.65
     bgImage.ScaleType = Enum.ScaleType.Crop
-    bgImage.ImageColor3 = Color3.fromRGB(255, 255, 255)
-    bgImage.ImageTransparency = 0.15
-    bgImage.ZIndex = 0
-    bgImage.Parent = popup
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, 0, 0, 45)
+    bgImage.ZIndex = 1
+    bgImage.Active = false
+
+    local overlay = Instance.new("Frame", popup)
+    overlay.Size = UDim2.new(1,0,1,0)
+    overlay.BackgroundColor3 = Color3.new(0,0,0)
+    overlay.BackgroundTransparency = 0.4
+    overlay.ZIndex = 2
+
+    local title = Instance.new("TextLabel", popup)
+    title.Size = UDim2.new(1,0,0,50)
     title.BackgroundTransparency = 1
-    title.Text = "⭐ Join for More Scripts!"
+    title.Text = "⭐ Join for Free Scripts"
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 22
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.ZIndex = 2
-    title.Parent = popup
-    
-    local linkBox = Instance.new("TextButton")
-    linkBox.Size = UDim2.new(0.85, 0, 0, 50)
-    linkBox.Position = UDim2.new(0.075, 0, 0.38, 0)
-    linkBox.BackgroundColor3 = Color3.fromRGB(59, 89, 255)
-    linkBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    linkBox.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
-    linkBox.Font = Enum.Font.GothamBold
-    linkBox.TextSize = 18
-    linkBox.ZIndex = 3
-    linkBox.Parent = popup
-    
-    local linkCorner = Instance.new("UICorner")
-    linkCorner.CornerRadius = UDim.new(0, 12)
-    linkCorner.Parent = linkBox
-    
-    local linkGradient = Instance.new("UIGradient")
-    linkGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 120, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 60, 255))
-    })
-    linkGradient.Parent = linkBox
-    
-    local info = Instance.new("TextLabel")
-    info.Size = UDim2.new(1, 0, 0, 30)
-    info.Position = UDim2.new(0, 0, 0.65, 0)
+    title.TextSize = 24
+    title.TextColor3 = Color3.new(1,1,1)
+    title.ZIndex = 10
+
+    local linkBtn = Instance.new("TextButton", popup)
+    linkBtn.Size = UDim2.new(0.85,0,0,55)
+    linkBtn.Position = UDim2.new(0.075,0,0.35,0)
+    linkBtn.BackgroundColor3 = Color3.fromRGB(0,120,255)
+    linkBtn.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
+    linkBtn.TextColor3 = Color3.new(1,1,1)
+    linkBtn.Font = Enum.Font.GothamBold
+    linkBtn.TextSize = 19
+    linkBtn.ZIndex = 10
+    local lbCorner = Instance.new("UICorner", linkBtn); lbCorner.CornerRadius = UDim.new(0,14)
+
+    local info = Instance.new("TextLabel", popup)
+    info.Size = UDim2.new(1,0,0,30)
+    info.Position = UDim2.new(0,0,0.58,0)
     info.BackgroundTransparency = 1
-    info.Text = "Daily Free Roblox Scripts 🔥"
+    info.Text = "Daily updates • No viruses"
+    info.TextColor3 = Color3.fromRGB(200,200,200)
     info.Font = Enum.Font.Gotham
     info.TextSize = 16
-    info.TextColor3 = Color3.fromRGB(220, 220, 220)
-    info.ZIndex = 2
-    info.Parent = popup
-    
-    local ok = Instance.new("TextButton")
-    ok.Size = UDim2.new(0, 90, 0, 40)
-    ok.Position = UDim2.new(0.5, -45, 1, -55)
-    ok.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
-    ok.TextColor3 = Color3.fromRGB(0, 0, 0)
-    ok.Text = "Continue"
-    ok.Font = Enum.Font.GothamBold
-    ok.TextSize = 18
-    ok.ZIndex = 3
-    ok.Parent = popup
-    
-    local okCorner = Instance.new("UICorner")
-    okCorner.CornerRadius = UDim.new(0, 10)
-    okCorner.Parent = ok
-    
-    local okGradient = Instance.new("UIGradient")
-    okGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 100))
-    })
-    okGradient.Parent = ok
-    
-    -- Open Telegram Link
-    local function openTelegram()
-        local url = "https://t.me/RBLX_SCRIPTS_MYANMAR"
-        if setclipboard then
-            setclipboard(url)
-        end
-        -- Try to open in browser for executors
-        pcall(function()
-            if syn and syn.request then
-                syn.request({Url = url, Method = "GET"})
-            elseif http and http.request then
-                http.request({Url = url, Method = "GET"})
-            elseif http_request then
-                http_request({Url = url, Method = "GET"})
-            elseif fluxus and fluxus.request then
-                fluxus.request({Url = url})
-            end
-        end)
-        linkBox.Text = "Opened/Copied! ✅"
-        task.wait(2)
-        linkBox.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
-    end
-    
-    linkBox.MouseButton1Click:Connect(openTelegram)
-    
-    -- Continue Button
-    ok.MouseButton1Click:Connect(function()
-        -- Mark as seen
-        local seenValue = Instance.new("BoolValue")
-        seenValue.Name = "SeenTelegram"
-        seenValue.Value = true
-        seenValue.Parent = gui
-        
-        -- Animate popup out
-        popup:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.5, true)
-        task.wait(0.5)
-        popup:Destroy()
-        
-        -- Show icon
-        showIcon()
-    end)
-    
-    -- Hover effects for popup buttons
-    for _, btn in pairs({linkBox, ok}) do
-        btn.MouseEnter:Connect(function()
-            TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size + UDim2.new(0, 4, 0, 2)}):Play()
-        end)
-        btn.MouseLeave:Connect(function()
-            TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size - UDim2.new(0, 4, 0, 2)}):Play()
-        end)
-    end
-else
-    -- Already seen, show icon
-    showIcon()
-end
+    info.ZIndex = 10
 
--- Function to show icon with animation
-function showIcon()
-    icon.Size = UDim2.new(0, 0, 0, 0)
-    icon.Visible = true
-    TweenService:Create(icon, TweenInfo.new(0.7, Enum.EasingDirection.Out, Enum.EasingStyle.Back), {
-        Size = UDim2.new(0, 64, 0, 64)
-    }):Play()
+    local continueBtn = Instance.new("TextButton", popup)
+    continueBtn.Size = UDim2.new(0,120,0,50)
+    continueBtn.Position = UDim2.new(0.5,-60,1,-70)
+    continueBtn.BackgroundColor3 = Color3.fromRGB(0,255,140)
+    continueBtn.Text = "Continue"
+    continueBtn.TextColor3 = Color3.new(0,0,0)
+    continueBtn.Font = Enum.Font.GothamBold
+    continueBtn.TextSize = 20
+    continueBtn.ZIndex = 10
+    local cb2Corner = Instance.new("UICorner", continueBtn); cb2Corner.CornerRadius = UDim.new(0,12)
+
+    -- Button actions
+    linkBtn.MouseButton1Click:Connect(function()
+        clickSound:Play()
+        local url = "https://t.me/RBLX_SCRIPTS_MYANMAR"
+        if setclipboard then setclipboard(url) end
+        linkBtn.Text = "✅ Copied!"
+        task.wait(1.5)
+        linkBtn.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
+    end)
+
+    continueBtn.MouseButton1Click:Connect(function()
+        clickSound:Play()
+        local seen = Instance.new("BoolValue", gui)
+        seen.Name = "SeenTelegram"
+        seen.Value = true
+
+        popup:TweenSize(UDim2.new(0,0,0,0), Enum.EasingStyle.Back, Enum.EasingDirection.In, 0.5, true)
+        task.wait(0.55)
+        popup:Destroy()
+        showIcon()   -- ← Icon appears only now
+    end)
+else
+    showIcon()
 end
