@@ -1,5 +1,5 @@
---// ULTRA ENHANCER - CENTERED SQUIRCLE ICON
---// Icon appears in center, movable, works as button
+--// ULTRA ENHANCER - MOVABLE BUTTON VERSION
+--// Button appears in center, movable, loads main script when clicked
 
 -- Wait for game to load
 repeat task.wait() until game:IsLoaded()
@@ -39,8 +39,9 @@ local Storage = {
     popupShown = false,
     telegramClicked = false,
     shaderEnabled = false,
-    iconPosition = {X = 0.5, Y = 0.5}, -- CENTER OF SCREEN
-    windowPosition = {X = 0.5, Y = 0.5}
+    buttonPosition = {X = 0.5, Y = 0.5}, -- CENTER OF SCREEN
+    windowPosition = {X = 0.5, Y = 0.5},
+    buttonVisible = true
 }
 
 -- Save/Load
@@ -59,140 +60,110 @@ end
 LoadSettings()
 
 ----------------------------------------------------
--- CENTERED SQUIRCLE ICON (MOVABLE BUTTON)
+-- CENTERED MOVABLE BUTTON
 ----------------------------------------------------
-local movableIcon = nil
-local isDraggingIcon = false
+local movableButton = nil
+local isDraggingButton = false
 local dragStartPosition = nil
-local iconStartPosition = nil
+local buttonStartPosition = nil
 
-local function CreateCenteredIcon()
-    print("🎯 Creating centered squircle icon...")
+local function CreateMovableButton()
+    print("🎯 Creating centered movable button...")
     
-    -- Remove existing icon
-    if movableIcon and movableIcon.Parent then
-        movableIcon:Destroy()
+    -- Remove existing button
+    if movableButton and movableButton.Parent then
+        movableButton:Destroy()
     end
     
-    -- Create the icon as a button
-    movableIcon = Instance.new("ImageButton")
-    movableIcon.Name = "CenterIcon"
-    movableIcon.Size = UDim2.new(0, 100, 0, 100) -- Bigger for center
-    movableIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-    movableIcon.AutoButtonColor = false
-    movableIcon.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-    movableIcon.BackgroundTransparency = 0.1
-    movableIcon.ZIndex = 10
+    -- Create the main button
+    movableButton = Instance.new("TextButton")
+    movableButton.Name = "UltraButton"
+    movableButton.Size = UDim2.new(0, 120, 0, 50) -- Button size
+    movableButton.AnchorPoint = Vector2.new(0.5, 0.5)
+    movableButton.AutoButtonColor = false
+    movableButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    movableButton.BackgroundTransparency = 0.1
+    movableButton.ZIndex = 10
+    movableButton.Text = ""
     
     -- POSITION IN CENTER OF SCREEN
     local screenSize = workspace.CurrentCamera.ViewportSize
-    movableIcon.Position = UDim2.new(
-        Storage.iconPosition.X,
-        Storage.iconPosition.X * screenSize.X,
-        Storage.iconPosition.Y,
-        Storage.iconPosition.Y * screenSize.Y
+    movableButton.Position = UDim2.new(
+        Storage.buttonPosition.X,
+        Storage.buttonPosition.X * screenSize.X,
+        Storage.buttonPosition.Y,
+        Storage.buttonPosition.Y * screenSize.Y
     )
     
-    -- SQUIRCLE SHAPE (Modern rounded square)
-    local corner = Instance.new("UICorner", movableIcon)
-    corner.CornerRadius = UDim.new(0.25, 0) -- Squircle shape
+    -- Button styling
+    local corner = Instance.new("UICorner", movableButton)
+    corner.CornerRadius = UDim.new(0, 12) -- Rounded corners
     
     -- Glossy border
-    local border = Instance.new("UIStroke", movableIcon)
+    local border = Instance.new("UIStroke", movableButton)
     border.Color = Color3.fromRGB(100, 150, 255)
-    border.Thickness = 3
+    border.Thickness = 2
     border.Transparency = 0.2
     
-    -- Inner glow
-    local innerGlow = Instance.new("Frame", movableIcon)
-    innerGlow.Size = UDim2.new(1, -10, 1, -10)
-    innerGlow.Position = UDim2.new(0, 5, 0, 5)
-    innerGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    innerGlow.BackgroundTransparency = 0.95
-    innerGlow.BorderSizePixel = 0
-    
-    local glowCorner = Instance.new("UICorner", innerGlow)
-    glowCorner.CornerRadius = UDim.new(0.2, 0)
-    
-    -- Icon content
-    local content = Instance.new("Frame", movableIcon)
-    content.Size = UDim2.new(0.7, 0, 0.7, 0)
-    content.Position = UDim2.new(0.15, 0, 0.15, 0)
+    -- Button content container
+    local content = Instance.new("Frame", movableButton)
+    content.Size = UDim2.new(1, -20, 1, -20)
+    content.Position = UDim2.new(0, 10, 0, 10)
     content.BackgroundTransparency = 1
     
-    -- Animated gradient
-    local gradient = Instance.new("UIGradient", content)
-    gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 200, 255)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200, 100, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 200, 255))
-    })
-    gradient.Rotation = 45
+    -- Icon
+    local icon = Instance.new("TextLabel", content)
+    icon.Size = UDim2.new(0, 30, 0, 30)
+    icon.Position = UDim2.new(0, 5, 0.5, -15)
+    icon.Text = "⚡"
+    icon.Font = Enum.Font.GothamBold
+    icon.TextSize = 24
+    icon.TextColor3 = Color3.fromRGB(255, 255, 255)
+    icon.BackgroundTransparency = 1
     
-    -- Rotate gradient
+    -- Button text
+    local buttonText = Instance.new("TextLabel", content)
+    buttonText.Size = UDim2.new(1, -40, 1, 0)
+    buttonText.Position = UDim2.new(0, 40, 0, 0)
+    buttonText.Text = "ULTRA\nENHANCER"
+    buttonText.Font = Enum.Font.GothamBold
+    buttonText.TextSize = 12
+    buttonText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    buttonText.BackgroundTransparency = 1
+    buttonText.TextXAlignment = Enum.TextXAlignment.Left
+    buttonText.TextYAlignment = Enum.TextYAlignment.Center
+    
+    -- Active indicator dot
+    local activeDot = Instance.new("Frame", movableButton)
+    activeDot.Size = UDim2.new(0, 8, 0, 8)
+    activeDot.Position = UDim2.new(1, -12, 0, 8)
+    activeDot.BackgroundColor3 = Color3.fromRGB(255, 50, 50) -- Red = inactive
+    activeDot.BorderSizePixel = 0
+    
+    local dotCorner = Instance.new("UICorner", activeDot)
+    dotCorner.CornerRadius = UDim.new(1, 0)
+    
+    -- Pulsing animation for dot
     task.spawn(function()
-        while movableIcon and movableIcon.Parent do
-            gradient.Rotation = gradient.Rotation + 0.5
-            if gradient.Rotation >= 360 then
-                gradient.Rotation = 0
-            end
-            task.wait(0.03)
-        end
-    end)
-    
-    -- Icon symbol
-    local iconSymbol = Instance.new("TextLabel", content)
-    iconSymbol.Size = UDim2.new(1, 0, 1, 0)
-    iconSymbol.Text = "⚡"
-    iconSymbol.Font = Enum.Font.GothamBold
-    iconSymbol.TextSize = 42
-    iconSymbol.TextColor3 = Color3.fromRGB(255, 255, 255)
-    iconSymbol.BackgroundTransparency = 1
-    
-    -- Pulsing animation
-    task.spawn(function()
-        while movableIcon and movableIcon.Parent do
-            TweenService:Create(iconSymbol, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-                TextSize = 46
+        while activeDot and activeDot.Parent do
+            TweenService:Create(activeDot, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+                Size = UDim2.new(0, 10, 0, 10)
             }):Play()
             task.wait(1.6)
         end
     end)
     
     -- DRAGGING FUNCTIONALITY
-    movableIcon.InputBegan:Connect(function(input)
+    movableButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDraggingIcon = true
+            isDraggingButton = true
             dragStartPosition = Vector2.new(input.Position.X, input.Position.Y)
-            iconStartPosition = movableIcon.Position
+            buttonStartPosition = movableButton.Position
             
             -- Visual feedback for dragging
-            TweenService:Create(movableIcon, TweenInfo.new(0.15), {
-                Size = UDim2.new(0, 95, 0, 95),
+            TweenService:Create(movableButton, TweenInfo.new(0.15), {
+                Size = UDim2.new(0, 115, 0, 48),
                 BackgroundTransparency = 0
-            }):Play()
-            TweenService:Create(border, TweenInfo.new(0.15), {
-                Thickness = 4
-            }):Play()
-        end
-    end)
-    
-    movableIcon.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDraggingIcon = false
-            
-            -- Save position
-            local screenSize = workspace.CurrentCamera.ViewportSize
-            Storage.iconPosition = {
-                X = movableIcon.Position.X.Offset / screenSize.X,
-                Y = movableIcon.Position.Y.Offset / screenSize.Y
-            }
-            SaveSettings()
-            
-            -- Visual feedback
-            TweenService:Create(movableIcon, TweenInfo.new(0.15), {
-                Size = UDim2.new(0, 100, 0, 100),
-                BackgroundTransparency = 0.1
             }):Play()
             TweenService:Create(border, TweenInfo.new(0.15), {
                 Thickness = 3
@@ -200,32 +171,55 @@ local function CreateCenteredIcon()
         end
     end)
     
+    movableButton.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDraggingButton = false
+            
+            -- Save position
+            local screenSize = workspace.CurrentCamera.ViewportSize
+            Storage.buttonPosition = {
+                X = movableButton.Position.X.Offset / screenSize.X,
+                Y = movableButton.Position.Y.Offset / screenSize.Y
+            }
+            SaveSettings()
+            
+            -- Visual feedback
+            TweenService:Create(movableButton, TweenInfo.new(0.15), {
+                Size = UDim2.new(0, 120, 0, 50),
+                BackgroundTransparency = 0.1
+            }):Play()
+            TweenService:Create(border, TweenInfo.new(0.15), {
+                Thickness = 2
+            }):Play()
+        end
+    end)
+    
     UserInputService.InputChanged:Connect(function(input)
-        if isDraggingIcon and input.UserInputType == Enum.UserInputType.MouseMovement then
+        if isDraggingButton and input.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = Vector2.new(
                 input.Position.X - dragStartPosition.X,
                 input.Position.Y - dragStartPosition.Y
             )
             
             local newPosition = UDim2.new(
-                iconStartPosition.X.Scale,
-                iconStartPosition.X.Offset + delta.X,
-                iconStartPosition.Y.Scale,
-                iconStartPosition.Y.Offset + delta.Y
+                buttonStartPosition.X.Scale,
+                buttonStartPosition.X.Offset + delta.X,
+                buttonStartPosition.Y.Scale,
+                buttonStartPosition.Y.Offset + delta.Y
             )
             
-            movableIcon.Position = newPosition
+            movableButton.Position = newPosition
         end
     end)
     
-    -- CLICK FUNCTIONALITY - LOADS MAIN SCRIPT
-    movableIcon.MouseButton1Click:Connect(function()
-        if not isDraggingIcon then
-            print("🎯 Squircle icon clicked - Loading main features...")
+    -- BUTTON CLICK FUNCTIONALITY - LOADS MAIN SCRIPT
+    movableButton.MouseButton1Click:Connect(function()
+        if not isDraggingButton then
+            print("🎯 Button clicked - Loading main features...")
             
             -- Click animation
-            TweenService:Create(movableIcon, TweenInfo.new(0.1), {
-                Size = UDim2.new(0, 90, 0, 90)
+            TweenService:Create(movableButton, TweenInfo.new(0.1), {
+                Size = UDim2.new(0, 110, 0, 45)
             }):Play()
             
             -- Play sound
@@ -233,15 +227,15 @@ local function CreateCenteredIcon()
                 local clickSound = Instance.new("Sound")
                 clickSound.SoundId = "rbxassetid://4590662766"
                 clickSound.Volume = 0.5
-                clickSound.Parent = movableIcon
+                clickSound.Parent = movableButton
                 clickSound:Play()
                 game:GetService("Debris"):AddItem(clickSound, 2)
             end)
             
             task.wait(0.1)
             
-            TweenService:Create(movableIcon, TweenInfo.new(0.1), {
-                Size = UDim2.new(0, 100, 0, 100)
+            TweenService:Create(movableButton, TweenInfo.new(0.1), {
+                Size = UDim2.new(0, 120, 0, 50)
             }):Play()
             
             -- Check if main GUI already exists
@@ -250,33 +244,37 @@ local function CreateCenteredIcon()
                 return
             end
             
-            -- LOAD THE MAIN FEATURES
-            CreateMainFeatures()
+            -- Update button to show it's active
+            activeDot.BackgroundColor3 = Color3.fromRGB(50, 255, 100) -- Green = active
+            buttonText.Text = "ACTIVE"
+            
+            -- LOAD THE MAIN SCRIPT WITH FEATURES
+            CreateMainScript()
         end
     end)
     
     -- Hover effects
-    movableIcon.MouseEnter:Connect(function()
-        if not isDraggingIcon then
-            TweenService:Create(movableIcon, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 105, 0, 105),
+    movableButton.MouseEnter:Connect(function()
+        if not isDraggingButton then
+            TweenService:Create(movableButton, TweenInfo.new(0.2), {
+                Size = UDim2.new(0, 125, 0, 52),
                 BackgroundTransparency = 0
             }):Play()
             TweenService:Create(border, TweenInfo.new(0.2), {
-                Thickness = 4,
+                Thickness = 3,
                 Transparency = 0.1
             }):Play()
         end
     end)
     
-    movableIcon.MouseLeave:Connect(function()
-        if not isDraggingIcon then
-            TweenService:Create(movableIcon, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 100, 0, 100),
+    movableButton.MouseLeave:Connect(function()
+        if not isDraggingButton then
+            TweenService:Create(movableButton, TweenInfo.new(0.2), {
+                Size = UDim2.new(0, 120, 0, 50),
                 BackgroundTransparency = 0.1
             }):Play()
             TweenService:Create(border, TweenInfo.new(0.2), {
-                Thickness = 3,
+                Thickness = 2,
                 Transparency = 0.2
             }):Play()
         end
@@ -287,29 +285,29 @@ local function CreateCenteredIcon()
     local floatTime = 0
     
     task.spawn(function()
-        while movableIcon and movableIcon.Parent do
-            if not isDraggingIcon then
+        while movableButton and movableButton.Parent do
+            if not isDraggingButton then
                 floatTime = floatTime + 0.05
                 floatOffset = Vector2.new(
-                    math.sin(floatTime) * 4,
-                    math.cos(floatTime * 0.8) * 4
+                    math.sin(floatTime) * 3,
+                    math.cos(floatTime * 0.8) * 3
                 )
                 
-                movableIcon.Position = UDim2.new(
-                    movableIcon.Position.X.Scale,
-                    movableIcon.Position.X.Offset + floatOffset.X,
-                    movableIcon.Position.Y.Scale,
-                    movableIcon.Position.Y.Offset + floatOffset.Y
+                movableButton.Position = UDim2.new(
+                    movableButton.Position.X.Scale,
+                    movableButton.Position.X.Offset + floatOffset.X,
+                    movableButton.Position.Y.Scale,
+                    movableButton.Position.Y.Offset + floatOffset.Y
                 )
             end
             task.wait(0.05)
         end
     end)
     
-    movableIcon.Parent = gui
+    movableButton.Parent = gui
     
-    print("✅ Centered squircle icon created at screen center")
-    return movableIcon
+    print("✅ Movable button created at screen center")
+    return movableButton
 end
 
 ----------------------------------------------------
@@ -332,7 +330,7 @@ local function CreateTelegramPopup()
     -- Popup
     local popup = Instance.new("Frame", overlay)
     popup.Name = "TelegramPopup"
-    popup.Size = UDim2.new(0, 420, 0, 320)
+    popup.Size = UDim2.new(0, 400, 0, 300)
     popup.Position = UDim2.new(0.5, 0, 0.5, 0)
     popup.AnchorPoint = Vector2.new(0.5, 0.5)
     popup.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
@@ -340,40 +338,23 @@ local function CreateTelegramPopup()
     popup.ZIndex = 16
     
     local corner = Instance.new("UICorner", popup)
-    corner.CornerRadius = UDim.new(0, 24)
-    
-    -- Glass effect
-    local glass = Instance.new("Frame", popup)
-    glass.Size = UDim2.new(1, 0, 1, 0)
-    glass.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    glass.BackgroundTransparency = 0.98
-    glass.BorderSizePixel = 0
-    
-    -- Telegram icon
-    local tgIcon = Instance.new("TextLabel", popup)
-    tgIcon.Size = UDim2.new(0, 80, 0, 80)
-    tgIcon.Position = UDim2.new(0.5, -40, 0.1, 0)
-    tgIcon.Text = "✈️"
-    tgIcon.Font = Enum.Font.GothamBold
-    tgIcon.TextSize = 48
-    tgIcon.TextColor3 = Color3.fromRGB(34, 158, 217)
-    tgIcon.BackgroundTransparency = 1
+    corner.CornerRadius = UDim.new(0, 20)
     
     -- Title
     local title = Instance.new("TextLabel", popup)
     title.Size = UDim2.new(1, -40, 0, 60)
-    title.Position = UDim2.new(0, 20, 0, 100)
-    title.Text = "Join Our Telegram Community"
+    title.Position = UDim2.new(0, 20, 0, 10)
+    title.Text = "Join Our Telegram"
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 22
+    title.TextSize = 24
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.BackgroundTransparency = 1
     
     -- Description
     local desc = Instance.new("TextLabel", popup)
     desc.Size = UDim2.new(1, -40, 0, 80)
-    desc.Position = UDim2.new(0, 20, 0, 160)
-    desc.Text = "Get exclusive scripts, tutorials, and daily updates from our growing community!"
+    desc.Position = UDim2.new(0, 20, 0, 80)
+    desc.Text = "Get exclusive scripts, tutorials, and daily updates!"
     desc.Font = Enum.Font.Gotham
     desc.TextSize = 16
     desc.TextColor3 = Color3.fromRGB(200, 200, 220)
@@ -382,9 +363,9 @@ local function CreateTelegramPopup()
     
     -- Join button
     local joinBtn = Instance.new("TextButton", popup)
-    joinBtn.Size = UDim2.new(0.8, 0, 0, 50)
-    joinBtn.Position = UDim2.new(0.1, 0, 0, 250)
-    joinBtn.Text = "Join Telegram"
+    joinBtn.Size = UDim2.new(1, -40, 0, 50)
+    joinBtn.Position = UDim2.new(0, 20, 0, 180)
+    joinBtn.Text = "Join Telegram Group"
     joinBtn.Font = Enum.Font.GothamBold
     joinBtn.TextSize = 18
     joinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -395,8 +376,8 @@ local function CreateTelegramPopup()
     
     -- Continue button
     local continueBtn = Instance.new("TextButton", popup)
-    continueBtn.Size = UDim2.new(0.4, 0, 0, 40)
-    continueBtn.Position = UDim2.new(0.3, 0, 0, 310)
+    continueBtn.Size = UDim2.new(1, -40, 0, 40)
+    continueBtn.Position = UDim2.new(0, 20, 0, 240)
     continueBtn.Text = "Continue"
     continueBtn.Font = Enum.Font.Gotham
     continueBtn.TextSize = 14
@@ -408,7 +389,7 @@ local function CreateTelegramPopup()
     
     -- Animate in
     popup.Size = UDim2.new(0, 0, 0, 0)
-    popup:TweenSize(UDim2.new(0, 420, 0, 320), "Out", "Back", 0.6, true)
+    popup:TweenSize(UDim2.new(0, 400, 0, 300), "Out", "Back", 0.6, true)
     
     -- Button handlers
     joinBtn.MouseButton1Click:Connect(function()
@@ -423,7 +404,7 @@ local function CreateTelegramPopup()
                 setclipboard(url)
                 joinBtn.Text = "Link Copied!"
                 task.wait(1)
-                joinBtn.Text = "Join Telegram"
+                joinBtn.Text = "Join Telegram Group"
             end
         end)
         
@@ -432,8 +413,8 @@ local function CreateTelegramPopup()
         task.wait(0.4)
         overlay:Destroy()
         
-        -- Show centered icon after popup closes
-        CreateCenteredIcon()
+        -- Show movable button after popup closes
+        CreateMovableButton()
     end)
     
     continueBtn.MouseButton1Click:Connect(function()
@@ -445,34 +426,40 @@ local function CreateTelegramPopup()
         task.wait(0.4)
         overlay:Destroy()
         
-        -- Show centered icon after popup closes
-        CreateCenteredIcon()
+        -- Show movable button after popup closes
+        CreateMovableButton()
     end)
     
     print("✅ Telegram popup created")
 end
 
 ----------------------------------------------------
--- MAIN FEATURES (Shader + FPS Boost)
+-- MAIN SCRIPT (Shader + FPS Boost)
 ----------------------------------------------------
 local shaderEffects = {}
+local mainGUI = nil
 
-local function CreateMainFeatures()
-    print("🖥️ Loading main features (Shader + FPS Boost)...")
+local function CreateMainScript()
+    print("🖥️ Loading main script with features...")
+    
+    -- Remove existing GUI
+    if mainGUI and mainGUI.Parent then
+        mainGUI:Destroy()
+    end
     
     -- Create main interface
-    local mainFrame = Instance.new("Frame", gui)
-    mainFrame.Name = "MainGUI"
-    mainFrame.Size = UDim2.new(0, 400, 0, 350)
-    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    mainFrame.BackgroundTransparency = 0.1
-    mainFrame.Active = true
-    mainFrame.Draggable = false
+    mainGUI = Instance.new("Frame", gui)
+    mainGUI.Name = "MainGUI"
+    mainGUI.Size = UDim2.new(0, 380, 0, 350)
+    mainGUI.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainGUI.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    mainGUI.BackgroundTransparency = 0.1
+    mainGUI.Active = true
+    mainGUI.Draggable = false
     
     -- Position at center
     local screenSize = workspace.CurrentCamera.ViewportSize
-    mainFrame.Position = UDim2.new(
+    mainGUI.Position = UDim2.new(
         Storage.windowPosition.X,
         Storage.windowPosition.X * screenSize.X,
         Storage.windowPosition.Y,
@@ -480,46 +467,39 @@ local function CreateMainFeatures()
     )
     
     -- Style
-    local corner = Instance.new("UICorner", mainFrame)
-    corner.CornerRadius = UDim.new(0, 24)
+    local corner = Instance.new("UICorner", mainGUI)
+    corner.CornerRadius = UDim.new(0, 20)
     
-    local stroke = Instance.new("UIStroke", mainFrame)
+    local stroke = Instance.new("UIStroke", mainGUI)
     stroke.Color = Color3.fromRGB(60, 60, 80)
     stroke.Thickness = 2
     
-    -- Glass effect
-    local glass = Instance.new("Frame", mainFrame)
-    glass.Size = UDim2.new(1, 0, 1, 0)
-    glass.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    glass.BackgroundTransparency = 0.97
-    glass.BorderSizePixel = 0
-    
     -- Title bar
-    local titleBar = Instance.new("Frame", mainFrame)
+    local titleBar = Instance.new("Frame", mainGUI)
     titleBar.Size = UDim2.new(1, 0, 0, 50)
     titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     titleBar.BorderSizePixel = 0
     
     local titleCorner = Instance.new("UICorner", titleBar)
-    titleCorner.CornerRadius = UDim.new(0, 24, 0, 0)
+    titleCorner.CornerRadius = UDim.new(0, 20, 0, 0)
     
     local title = Instance.new("TextLabel", titleBar)
     title.Size = UDim2.new(1, -40, 1, 0)
     title.Position = UDim2.new(0, 15, 0, 0)
     title.Text = "⚡ Ultra Features"
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 20
+    title.TextSize = 18
     title.TextColor3 = Color3.fromRGB(220, 220, 255)
     title.BackgroundTransparency = 1
     title.TextXAlignment = Enum.TextXAlignment.Left
     
     -- Close button
     local closeBtn = Instance.new("TextButton", titleBar)
-    closeBtn.Size = UDim2.new(0, 32, 0, 32)
-    closeBtn.Position = UDim2.new(1, -42, 0.5, -16)
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -35, 0.5, -15)
     closeBtn.Text = "×"
     closeBtn.Font = Enum.Font.GothamBold
-    closeBtn.TextSize = 28
+    closeBtn.TextSize = 24
     closeBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
     closeBtn.BackgroundTransparency = 1
     
@@ -527,38 +507,40 @@ local function CreateMainFeatures()
         -- Save position
         local screenSize = workspace.CurrentCamera.ViewportSize
         Storage.windowPosition = {
-            X = mainFrame.Position.X.Offset / screenSize.X,
-            Y = mainFrame.Position.Y.Offset / screenSize.Y
+            X = mainGUI.Position.X.Offset / screenSize.X,
+            Y = mainGUI.Position.Y.Offset / screenSize.Y
         }
         SaveSettings()
         
         -- Close animation
-        TweenService:Create(mainFrame, TweenInfo.new(0.3), {
+        TweenService:Create(mainGUI, TweenInfo.new(0.3), {
             Size = UDim2.new(0, 0, 0, 0),
             Position = UDim2.new(0.5, 0, 0.5, 0)
         }):Play()
         
-        -- Also close the icon
-        if movableIcon and movableIcon.Parent then
-            TweenService:Create(movableIcon, TweenInfo.new(0.3), {
-                Size = UDim2.new(0, 0, 0, 0)
-            }):Play()
+        -- Reset button to inactive state
+        if movableButton and movableButton.Parent then
+            local activeDot = movableButton:FindFirstChild("activeDot")
+            if activeDot then
+                activeDot.BackgroundColor3 = Color3.fromRGB(255, 50, 50) -- Red = inactive
+            end
+            local buttonText = movableButton:FindFirstChild("TextLabel")
+            if buttonText then
+                buttonText.Text = "ULTRA\nENHANCER"
+            end
         end
         
         task.wait(0.3)
         
         -- Cleanup
-        mainFrame:Destroy()
-        if movableIcon and movableIcon.Parent then
-            movableIcon:Destroy()
-            movableIcon = nil
-        end
+        mainGUI:Destroy()
+        mainGUI = nil
         
-        print("✅ Features closed, icon removed")
+        print("✅ Main script closed, button reset to inactive")
     end)
     
     -- Content area
-    local content = Instance.new("Frame", mainFrame)
+    local content = Instance.new("Frame", mainGUI)
     content.Size = UDim2.new(1, -20, 1, -70)
     content.Position = UDim2.new(0, 10, 0, 60)
     content.BackgroundTransparency = 1
@@ -587,11 +569,11 @@ local function CreateMainFeatures()
     shaderTitle.BackgroundTransparency = 1
     shaderTitle.TextXAlignment = Enum.TextXAlignment.Left
     
-    -- Shader toggle button
+    -- Shader button
     local shaderBtn = Instance.new("TextButton", shaderCard)
-    shaderBtn.Size = UDim2.new(0.6, 0, 0, 35)
-    shaderBtn.Position = UDim2.new(0.2, 0, 0, 40)
-    shaderBtn.Text = Storage.shaderEnabled and "DISABLE SHADER" or "ENABLE SHADER"
+    shaderBtn.Size = UDim2.new(0, 120, 0, 35)
+    shaderBtn.Position = UDim2.new(0.5, -60, 0, 40)
+    shaderBtn.Text = Storage.shaderEnabled and "DISABLE" or "ENABLE"
     shaderBtn.Font = Enum.Font.GothamBold
     shaderBtn.TextSize = 14
     shaderBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -627,9 +609,9 @@ local function CreateMainFeatures()
     
     -- FPS button
     local fpsBtn = Instance.new("TextButton", fpsCard)
-    fpsBtn.Size = UDim2.new(0.6, 0, 0, 35)
-    fpsBtn.Position = UDim2.new(0.2, 0, 0, 40)
-    fpsBtn.Text = "BOOST FPS"
+    fpsBtn.Size = UDim2.new(0, 120, 0, 35)
+    fpsBtn.Position = UDim2.new(0.5, -60, 0, 40)
+    fpsBtn.Text = "BOOST NOW"
     fpsBtn.Font = Enum.Font.GothamBold
     fpsBtn.TextSize = 14
     fpsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -661,20 +643,18 @@ local function CreateMainFeatures()
     fpsDisplay.TextColor3 = Color3.fromRGB(100, 255, 150)
     fpsDisplay.BackgroundTransparency = 1
     
-    -- Animate in
-    mainFrame.Size = UDim2.new(0, 0, 0, 0)
-    mainFrame:TweenSize(UDim2.new(0, 400, 0, 350), "Out", "Back", 0.5, true)
+    -- Animate GUI opening
+    mainGUI.Size = UDim2.new(0, 0, 0, 0)
+    mainGUI:TweenSize(UDim2.new(0, 380, 0, 350), "Out", "Back", 0.5, true)
     
-    -- ========== FUNCTIONALITY ==========
-    
-    -- SHADER TOGGLE
+    -- ========== SHADER FUNCTIONALITY ==========
     shaderBtn.MouseButton1Click:Connect(function()
         Storage.shaderEnabled = not Storage.shaderEnabled
         SaveSettings()
         
         if Storage.shaderEnabled then
             -- Enable shader
-            shaderBtn.Text = "DISABLE SHADER"
+            shaderBtn.Text = "DISABLE"
             TweenService:Create(shaderBtn, TweenInfo.new(0.3), {
                 BackgroundColor3 = Color3.fromRGB(60, 100, 180)
             }):Play()
@@ -702,7 +682,7 @@ local function CreateMainFeatures()
             print("✅ Ultra shader enabled")
         else
             -- Disable shader
-            shaderBtn.Text = "ENABLE SHADER"
+            shaderBtn.Text = "ENABLE"
             TweenService:Create(shaderBtn, TweenInfo.new(0.3), {
                 BackgroundColor3 = Color3.fromRGB(40, 40, 60)
             }):Play()
@@ -723,7 +703,7 @@ local function CreateMainFeatures()
         end
     end)
     
-    -- FPS BOOST
+    -- ========== FPS BOOST FUNCTIONALITY ==========
     fpsBtn.MouseButton1Click:Connect(function()
         -- Optimize game
         for _, obj in pairs(workspace:GetDescendants()) do
@@ -745,7 +725,7 @@ local function CreateMainFeatures()
         
         task.wait(1.5)
         
-        fpsBtn.Text = "BOOST FPS"
+        fpsBtn.Text = "BOOST NOW"
         TweenService:Create(fpsBtn, TweenInfo.new(0.3), {
             BackgroundColor3 = Color3.fromRGB(50, 180, 80)
         }):Play()
@@ -753,7 +733,7 @@ local function CreateMainFeatures()
         print("✅ Game optimized for FPS")
     end)
     
-    -- FPS COUNTER
+    -- ========== FPS COUNTER ==========
     local lastUpdate = tick()
     local frameCount = 0
     
@@ -779,8 +759,8 @@ local function CreateMainFeatures()
         end
     end)
     
-    print("✅ Main features loaded successfully")
-    return mainFrame
+    print("✅ Main script loaded successfully")
+    return mainGUI
 end
 
 ----------------------------------------------------
@@ -791,12 +771,12 @@ print("🚀 Starting Ultra Enhancer...")
 -- Check if we should show Telegram popup first
 if not Storage.popupShown then
     print("📱 First time - Showing Telegram popup")
-    -- Don't show icon yet, popup will show it after Continue
+    -- Don't show button yet, popup will show it after Continue
     CreateTelegramPopup()
 else
-    print("📱 Telegram already seen - Showing icon directly")
-    -- Show centered icon immediately
-    CreateCenteredIcon()
+    print("📱 Telegram already seen - Showing button directly")
+    -- Show movable button immediately in center
+    CreateMovableButton()
 end
 
 -- Auto-save on game close
@@ -806,13 +786,13 @@ game:BindToClose(function()
 end)
 
 print("✅ Ultra Enhancer ready!")
-print("👉 Click the blue squircle icon in the center to load features")
+print("👉 Click the movable button to activate features")
 
--- Simple notification function
+-- Simple notification
 local function ShowNotification(message)
     local notif = Instance.new("TextLabel")
-    notif.Size = UDim2.new(0, 200, 0, 40)
-    notif.Position = UDim2.new(0.5, -100, 0.9, 0)
+    notif.Size = UDim2.new(0, 250, 0, 40)
+    notif.Position = UDim2.new(0.5, -125, 0.9, 0)
     notif.Text = message
     notif.Font = Enum.Font.GothamBold
     notif.TextSize = 14
@@ -828,7 +808,7 @@ local function ShowNotification(message)
     
     -- Animate in
     notif:TweenPosition(
-        UDim2.new(0.5, -100, 0.85, 0),
+        UDim2.new(0.5, -125, 0.85, 0),
         "Out",
         "Quad",
         0.3,
@@ -839,7 +819,7 @@ local function ShowNotification(message)
     task.delay(3, function()
         if notif and notif.Parent then
             notif:TweenPosition(
-                UDim2.new(0.5, -100, 0.9, 0),
+                UDim2.new(0.5, -125, 0.9, 0),
                 "In",
                 "Quad",
                 0.3,
@@ -856,5 +836,5 @@ task.wait(1)
 if not Storage.popupShown then
     ShowNotification("Welcome! Please check the Telegram popup")
 else
-    ShowNotification("Click the blue squircle icon to load features")
+    ShowNotification("Click the 'ULTRA ENHANCER' button to activate features")
 end
