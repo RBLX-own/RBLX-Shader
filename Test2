@@ -1,3 +1,11 @@
+--[[
+IMPORTANT: UPLOAD THE IMAGE FIRST!
+1. Download the image from: https://drive.google.com/file/d/1sFBzKFh-XqUg21-IgqRFz3IrNtK8tA_b/view?usp=drivesdk
+2. Go to Roblox.com > Create > Images > Upload the image.
+3. Copy the Asset ID (rbxassetid://XXXXXXXXX) from the image properties.
+4. Replace the IMAGE_ID below with your ID.
+--]]
+
 local IMAGE_ID = "rbxassetid://121158130775447"  -- <-- PASTE YOUR IMAGE ID HERE!
 
 local Players = game:GetService("Players")
@@ -31,6 +39,14 @@ local iconCorner = Instance.new("UICorner")
 iconCorner.CornerRadius = UDim.new(0, 22)
 iconCorner.Parent = icon
 
+local iconGradient = Instance.new("UIGradient")
+iconGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 200, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 150, 255))
+})
+iconGradient.Rotation = 45
+iconGradient.Parent = icon
+
 local iconStroke = Instance.new("UIStroke")
 iconStroke.Color = Color3.fromRGB(100, 200, 255)
 iconStroke.Thickness = 2.5
@@ -38,7 +54,7 @@ iconStroke.Transparency = 0.4
 iconStroke.Parent = icon
 
 -- Icon Animations
-local pulseTween = TweenService:Create(icon, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0, 72, 0, 72)})
+local pulseTween = TweenService:Create(icon, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0, 72, 0, 72)})
 local hoverTween = TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 78, 0, 78), Rotation = 360, ImageTransparency = 0.05})
 local leaveTween = TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 64, 0, 64), Rotation = 0, ImageTransparency = 0})
 local clickTween1 = TweenService:Create(icon, TweenInfo.new(0.12, Enum.EasingStyle.Quart), {Size = UDim2.new(0, 82, 0, 82), ImageTransparency = 0.4})
@@ -114,14 +130,16 @@ end)
 icon.MouseEnter:Connect(function()
     if not dragging then
         hoverTween:Play()
-        TweenService:Create(iconStroke, TweenInfo.new(0.3), {Thickness = 4, Transparency = 0}):Play()
+        TweenService:Create(iconStroke, TweenInfo.new(0.3), {Thickness = 4, Transparency = 0, Color = Color3.fromRGB(150, 255, 255)}):Play()
+        TweenService:Create(iconGradient, TweenInfo.new(0.3), {Rotation = 135}):Play()
     end
 end)
 
 icon.MouseLeave:Connect(function()
     if not dragging then
         leaveTween:Play()
-        TweenService:Create(iconStroke, TweenInfo.new(0.3), {Thickness = 2.5, Transparency = 0.4}):Play()
+        TweenService:Create(iconStroke, TweenInfo.new(0.3), {Thickness = 2.5, Transparency = 0.4, Color = Color3.fromRGB(100, 200, 255)}):Play()
+        TweenService:Create(iconGradient, TweenInfo.new(0.3), {Rotation = 45}):Play()
     end
 end)
 
@@ -176,9 +194,18 @@ function createEnhancer()
     frameCorner.CornerRadius = UDim.new(0, 16)
     frameCorner.Parent = enhancer
     
+    local frameGradient = Instance.new("UIGradient")
+    frameGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 30)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 10))
+    })
+    frameGradient.Rotation = 90
+    frameGradient.Parent = enhancer
+    
     local frameStroke = Instance.new("UIStroke")
     frameStroke.Color = Color3.fromRGB(50, 50, 50)
     frameStroke.Thickness = 1
+    frameStroke.Transparency = 0.5
     frameStroke.Parent = enhancer
     
     -- Title Bar
@@ -191,6 +218,14 @@ function createEnhancer()
     local titleBarCorner = Instance.new("UICorner")
     titleBarCorner.CornerRadius = UDim.new(0, 16)
     titleBarCorner.Parent = titleBar
+    
+    local titleBarGradient = Instance.new("UIGradient")
+    titleBarGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 40)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20))
+    })
+    titleBarGradient.Rotation = 90
+    titleBarGradient.Parent = titleBar
     
     local titleBarStroke = Instance.new("UIStroke")
     titleBarStroke.Color = Color3.fromRGB(60, 60, 60)
@@ -246,10 +281,17 @@ function createEnhancer()
     shaderBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
     shaderBtn.Font = Enum.Font.GothamBold
     shaderBtn.TextSize = 16
-    shaderBtn.Text = "Enable Shader"
+    shaderBtn.Text = "🌟 Enable Shader"
     shaderBtn.Parent = enhancer
     local shaderCorner = Instance.new("UICorner", shaderBtn)
     shaderCorner.CornerRadius = UDim.new(0, 12)
+    
+    local shaderGradient = Instance.new("UIGradient")
+    shaderGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 220, 220))
+    })
+    shaderGradient.Parent = shaderBtn
     
     shaderBtn.MouseButton1Click:Connect(function()
         -- Toggle shader (same as original, ultra realistic)
@@ -352,7 +394,7 @@ function createEnhancer()
             end)
             
             shaderEnabled = true
-            shaderBtn.Text = "Disable Shader"
+            shaderBtn.Text = "🌟 Disable Shader"
             TweenService:Create(shaderBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255, 100, 100), TextColor3 = Color3.fromRGB(255,255,255)}):Play()
         else
             -- Disable
@@ -381,11 +423,10 @@ function createEnhancer()
             a.ClockTime = 14
             
             shaderEnabled = false
-            shaderBtn.Text = "Enable Shader"
+            shaderBtn.Text = "🌟 Enable Shader"
             TweenService:Create(shaderBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255,255,255), TextColor3 = Color3.fromRGB(0,0,0)}):Play()
         end
-    end
-end)
+    end)
 
 -- FPS Boost Button
 local fpsBtn = Instance.new("TextButton")
@@ -395,10 +436,17 @@ fpsBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 fpsBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 fpsBtn.Font = Enum.Font.GothamBold
 fpsBtn.TextSize = 16
-fpsBtn.Text = "Boost FPS"
+fpsBtn.Text = "⚡ Boost FPS"
 fpsBtn.Parent = enhancer
 local fpsCorner = Instance.new("UICorner", fpsBtn)
 fpsCorner.CornerRadius = UDim.new(0, 12)
+
+local fpsGradient = Instance.new("UIGradient")
+fpsGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 220, 220))
+})
+fpsGradient.Parent = fpsBtn
 
 fpsBtn.MouseButton1Click:Connect(function()
     for _, v in pairs(workspace:GetDescendants()) do
@@ -412,7 +460,7 @@ fpsBtn.MouseButton1Click:Connect(function()
     fpsBtn.Text = "Boosted! ✅"
     TweenService:Create(fpsBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(0, 255, 100), TextColor3 = Color3.fromRGB(0,0,0)}):Play()
     task.wait(1.8)
-    fpsBtn.Text = "Boost FPS"
+    fpsBtn.Text = "⚡ Boost FPS"
     TweenService:Create(fpsBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255,255,255), TextColor3 = Color3.fromRGB(0,0,0)}):Play()
 end)
 
@@ -455,10 +503,10 @@ end)
 -- Hover effects for buttons
 for _, btn in pairs({shaderBtn, fpsBtn, minimizeBtn, closeBtn}) do
     btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size + UDim2.new(0, 4, 0, 2)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size + UDim2.new(0, 4, 0, 2), BackgroundColor3 = btn.BackgroundColor3:lerp(Color3.fromRGB(200, 200, 200), 0.2)}):Play()
     end)
     btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size - UDim2.new(0, 4, 0, 2)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size - UDim2.new(0, 4, 0, 2), BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
     end)
 end
 end
@@ -481,6 +529,14 @@ if not seenTelegram then
     local popupCorner = Instance.new("UICorner")
     popupCorner.CornerRadius = UDim.new(0, 16)
     popupCorner.Parent = popup
+    
+    local popupGradient = Instance.new("UIGradient")
+    popupGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 20)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+    })
+    popupGradient.Rotation = 90
+    popupGradient.Parent = popup
     
     -- Background Photo
     local bgImage = Instance.new("ImageLabel")
@@ -519,6 +575,13 @@ if not seenTelegram then
     linkCorner.CornerRadius = UDim.new(0, 12)
     linkCorner.Parent = linkBox
     
+    local linkGradient = Instance.new("UIGradient")
+    linkGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 120, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 60, 255))
+    })
+    linkGradient.Parent = linkBox
+    
     local info = Instance.new("TextLabel")
     info.Size = UDim2.new(1, 0, 0, 30)
     info.Position = UDim2.new(0, 0, 0.65, 0)
@@ -544,6 +607,13 @@ if not seenTelegram then
     local okCorner = Instance.new("UICorner")
     okCorner.CornerRadius = UDim.new(0, 10)
     okCorner.Parent = ok
+    
+    local okGradient = Instance.new("UIGradient")
+    okGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 150)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 100))
+    })
+    okGradient.Parent = ok
     
     -- Open Telegram Link
     local function openTelegram()
@@ -586,6 +656,16 @@ if not seenTelegram then
         -- Show icon
         showIcon()
     end)
+    
+    -- Hover effects for popup buttons
+    for _, btn in pairs({linkBox, ok}) do
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size + UDim2.new(0, 4, 0, 2)}):Play()
+        end)
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size - UDim2.new(0, 4, 0, 2)}):Play()
+        end)
+    end
 else
     -- Already seen, show icon
     showIcon()
