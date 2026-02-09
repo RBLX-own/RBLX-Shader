@@ -1,343 +1,857 @@
---// Combined GUI Script (Telegram Popup + Shader + FPS Booster + FPS Display)
+--// Enhanced GUI Script with Modern Features
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local ContentProvider = game:GetService("ContentProvider")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
 
 -- Main GUI
-local gui = Instance.new("ScreenGui", player.PlayerGui)
+local gui = Instance.new("ScreenGui")
 gui.ResetOnSpawn = false
 gui.Name = "EnhancedGUI"
+gui.IgnoreGuiInset = true
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Storage for assets
+local assetCache = {}
 
 ----------------------------------------------------
--- 1️⃣ TELEGRAM POPUP
+-- 1️⃣ LOAD AND DISPLAY SMALL MOVABLE ICON
 ----------------------------------------------------
-local popup = Instance.new("Frame")
-popup.Size = UDim2.new(0, 0, 0, 0)
-popup.Position = UDim2.new(0.5, 0, 0.5, 0)
-popup.AnchorPoint = Vector2.new(0.5, 0.5)
-popup.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-popup.Active = true
-popup.Draggable = true
-popup.BorderSizePixel = 0
-popup.Parent = gui
-Instance.new("UICorner", popup).CornerRadius = UDim.new(0, 14)
-
-popup:TweenSize(UDim2.new(0, 360, 0, 220), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.5, true)
-
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundTransparency = 1
-title.Text = "Click The Link Below"
-title.Font = Enum.Font.GothamBold
-title.TextSize = 20
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.Parent = popup
-
-local linkBox = Instance.new("TextButton")
-linkBox.Size = UDim2.new(0.85, 0, 0, 45)
-linkBox.Position = UDim2.new(0.075, 0, 0.35, 0)
-linkBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-linkBox.TextColor3 = Color3.fromRGB(0, 102, 255)
-linkBox.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
-linkBox.Font = Enum.Font.GothamBold
-linkBox.TextSize = 18
-Instance.new("UICorner", linkBox).CornerRadius = UDim.new(0, 10)
-linkBox.Parent = popup
-
-local info = Instance.new("TextLabel")
-info.Size = UDim2.new(1, 0, 0, 30)
-info.Position = UDim2.new(0, 0, 0.63, 0)
-info.BackgroundTransparency = 1
-info.Text = "More Scripts On Telegram"
-info.Font = Enum.Font.Gotham
-info.TextSize = 16
-info.TextColor3 = Color3.fromRGB(220, 220, 220)
-info.Parent = popup
-
-local ok = Instance.new("TextButton")
-ok.Size = UDim2.new(0, 80, 0, 35)
-ok.Position = UDim2.new(0.5, -40, 1, -50)
-ok.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ok.TextColor3 = Color3.fromRGB(0, 0, 0)
-ok.Text = "OK"
-ok.Font = Enum.Font.GothamBold
-ok.TextSize = 16
-Instance.new("UICorner", ok).CornerRadius = UDim.new(0, 8)
-ok.Parent = popup
-
-linkBox.MouseButton1Click:Connect(function()
-	if setclipboard then
-		setclipboard("https://t.me/RBLX_SCRIPTS_MYANMAR")
-	elseif writeclipboard then
-		writeclipboard("https://t.me/RBLX_SCRIPTS_MYANMAR")
-	end
-	linkBox.Text = "Copied!"
-	task.wait(1.5)
-	linkBox.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
-end)
-
-----------------------------------------------------
--- 2️⃣ SMALL ENHANCER WINDOW
-----------------------------------------------------
-ok.MouseButton1Click:Connect(function()
-	popup:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.4, true)
-	task.wait(0.4)
-	popup:Destroy()
-
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(0, 260, 0, 180)
-	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
-	frame.AnchorPoint = Vector2.new(0.5, 0.5)
-	frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-	frame.Active = true
-	frame.Draggable = true
-	frame.BorderSizePixel = 0
-	frame.Parent = gui
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
-
-	frame:TweenSize(UDim2.new(0, 280, 0, 190), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.5, true)
-
-	local title2 = Instance.new("TextLabel")
-	title2.Size = UDim2.new(1, 0, 0, 30)
-	title2.BackgroundTransparency = 1
-	title2.Text = "Game Enhancer"
-	title2.Font = Enum.Font.GothamBold
-	title2.TextSize = 18
-	title2.TextColor3 = Color3.fromRGB(255, 255, 255)
-	title2.Parent = frame
-
-	----------------------------------------------------
-	-- SHADER BUTTON (Toggle)
-	----------------------------------------------------
-	local shaderEnabled = false
-	local shaderBtn = Instance.new("TextButton")
-	shaderBtn.Size = UDim2.new(0.85, 0, 0, 45)
-	shaderBtn.Position = UDim2.new(0.075, 0, 0.3, 0)
-	shaderBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	shaderBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-	shaderBtn.Font = Enum.Font.GothamBold
-	shaderBtn.TextSize = 18
-	shaderBtn.Text = "Enable Shader"
-	Instance.new("UICorner", shaderBtn).CornerRadius = UDim.new(0, 10)
-	shaderBtn.Parent = frame
-
-	-- Store shader effects for toggling
-	local shaderEffects = {}
-
-	shaderBtn.MouseButton1Click:Connect(function()
-		if not shaderEnabled then
-			-- Enable Shader - Ultra Realistic Settings with Dynamic Shadows
-			local a = game.Lighting
+local function createMovableIcon()
+	-- Download and cache the image
+	local imageUrl = "https://drive.google.com/uc?export=download&id=1sFBzKFh-XqUg21-IgqRFz3IrNtK8tA_b"
+	
+	-- Create a loading indicator while image loads
+	local loadingFrame = Instance.new("Frame")
+	loadingFrame.Size = UDim2.new(0, 60, 0, 60)
+	loadingFrame.Position = UDim2.new(0, 20, 0, 20)
+	loadingFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	loadingFrame.BackgroundTransparency = 0.2
+	loadingFrame.Active = true
+	loadingFrame.Draggable = true
+	loadingFrame.Parent = gui
+	
+	local uiCorner = Instance.new("UICorner", loadingFrame)
+	uiCorner.CornerRadius = UDim.new(0, 20)
+	
+	local loadingText = Instance.new("TextLabel")
+	loadingText.Size = UDim2.new(1, 0, 1, 0)
+	loadingText.Text = "Loading..."
+	loadingText.TextColor3 = Color3.fromRGB(200, 200, 200)
+	loadingText.BackgroundTransparency = 1
+	loadingText.Font = Enum.Font.Gotham
+	loadingText.TextSize = 12
+	loadingText.Parent = loadingFrame
+	
+	-- Add subtle pulsing animation
+	local pulseConnection
+	pulseConnection = RunService.Heartbeat:Connect(function()
+		local alpha = (math.sin(tick() * 4) + 1) / 2 * 0.3 + 0.2
+		loadingFrame.BackgroundTransparency = alpha
+	end)
+	
+	-- Asynchronously load the image
+	task.spawn(function()
+		local success, result = pcall(function()
+			return game:HttpGetAsync(imageUrl)
+		end)
+		
+		pulseConnection:Disconnect()
+		loadingFrame:Destroy()
+		
+		if success and result then
+			-- Create the actual icon
+			local iconFrame = Instance.new("Frame")
+			iconFrame.Size = UDim2.new(0, 60, 0, 60)
+			iconFrame.Position = UDim2.new(0, 20, 0, 20)
+			iconFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+			iconFrame.BackgroundTransparency = 0.1
+			iconFrame.Active = true
+			iconFrame.Draggable = true
+			iconFrame.Parent = gui
+			iconFrame.Name = "MovableIcon"
 			
-			-- Ultra Realistic Lighting Setup
-			a.Ambient = Color3.fromRGB(25, 28, 35)  -- Cool, natural ambient for realistic shadow depth
-			a.Brightness = 1.8  -- Realistic brightness level
-			a.ColorShift_Bottom = Color3.fromRGB(8, 10, 15)  -- Deep shadow tones
-			a.ColorShift_Top = Color3.fromRGB(180, 200, 220)  -- Natural daylight sky
-			a.EnvironmentDiffuseScale = 0.6  -- Realistic light scattering
-			a.EnvironmentSpecularScale = 0.25  -- Subtle specular highlights
-			a.GlobalShadows = true
-			a.ShadowSoftness = 0.08  -- Sharp but natural shadows
-			a.OutdoorAmbient = Color3.fromRGB(90, 105, 125)  -- Realistic outdoor lighting
-			a.GeographicLatitude = 45.0  -- Temperate climate lighting
-			a.ExposureCompensation = 0.15  -- Natural exposure
-			a.ClockTime = 14  -- Afternoon for best shadow demonstration
+			-- Create squircle shape (rounded rectangle)
+			local uiCorner = Instance.new("UICorner", iconFrame)
+			uiCorner.CornerRadius = UDim.new(0, 18) -- More rounded corners
 			
-			-- Advanced Shadow System
-			a.ShadowColor = Color3.fromRGB(12, 15, 20)  -- Deep, realistic shadow color
-			a.GlobalShadows = true
+			-- Add stroke
+			local uiStroke = Instance.new("UIStroke", iconFrame)
+			uiStroke.Color = Color3.fromRGB(100, 100, 255)
+			uiStroke.Thickness = 1.5
+			uiStroke.Transparency = 0.3
 			
-			-- Remove harsh effects
-			if a:FindFirstChild("SunRaysEffect") then
-				a.SunRaysEffect:Destroy()
-			end
-
-			-- Advanced Bloom with realistic light bleed
-			local bloom = Instance.new("BloomEffect", a)
-			bloom.Enabled = true
-			bloom.Intensity = 0.25  -- Subtle realistic bloom
-			bloom.Size = 32  -- Natural bloom size
-			bloom.Threshold = 0.9  -- Only very bright surfaces
-			shaderEffects.bloom = bloom
-
-			-- Realistic Color Grading
-			local colorCorrection = Instance.new("ColorCorrectionEffect", a)
-			colorCorrection.Brightness = 0.05
-			colorCorrection.Contrast = 0.35  -- Enhanced contrast for depth
-			colorCorrection.Saturation = 0.1  -- Natural color saturation
-			colorCorrection.TintColor = Color3.fromRGB(255, 248, 235)  -- Subtle golden hour tint
-			colorCorrection.Enabled = true
-			shaderEffects.colorCorrection = colorCorrection
-
-			-- Shadow Enhancement Layer
-			local shadowEnhancer = Instance.new("ColorCorrectionEffect", a)
-			shadowEnhancer.Brightness = -0.08  -- Darken for shadow emphasis
-			shadowEnhancer.Contrast = 0.45  -- High contrast for defined shadows
-			shadowEnhancer.Saturation = -0.15  -- Desaturated shadows look more natural
-			shadowEnhancer.TintColor = Color3.fromRGB(240, 240, 245)  -- Cool shadow tint
-			shadowEnhancer.Enabled = true
-			shaderEffects.shadowEnhancer = shadowEnhancer
-
-			-- Realistic Depth of Field
-			local dof = Instance.new("DepthOfFieldEffect", a)
-			dof.Enabled = true
-			dof.FarIntensity = 0.15  -- Noticeable but realistic far blur
-			dof.FocusDistance = 35.0  -- Medium focus distance
-			dof.InFocusRadius = 25.0  -- Realistic focus range
-			dof.NearIntensity = 0.1  -- Subtle near blur
-			shaderEffects.dof = dof
-
-			-- Volumetric Atmosphere
-			local atmosphere = Instance.new("Atmosphere", a)
-			atmosphere.Density = 0.35  -- Visible atmosphere
-			atmosphere.Offset = 0.5
-			atmosphere.Color = Color3.fromRGB(170, 190, 220)  -- Realistic sky color
-			atmosphere.Decay = Color3.fromRGB(110, 130, 170)  -- Natural light decay
-			atmosphere.Glare = 0.1  -- Subtle glare
-			atmosphere.Haze = 0.15  -- Light haze for depth
-			shaderEffects.atmosphere = atmosphere
-
-			-- Realistic Fog for depth perception
-			local fog = Instance.new("FogEffect", a)
-			fog.Enabled = true
-			fog.Color = Color3.fromRGB(170, 180, 200)
-			fog.Density = 0.005  -- Very subtle fog
-			shaderEffects.fog = fog
-
-			-- Dynamic Shadow Mapping
-			local shadowMap = Instance.new("BlurEffect", a)
-			shadowMap.Enabled = true
-			shadowMap.Size = 2  -- Subtle shadow softening
-			shaderEffects.shadowMap = shadowMap
-
-			-- Enhanced Light Rays (subtle)
-			local sunRays = Instance.new("SunRaysEffect", a)
-			sunRays.Enabled = true
-			sunRays.Intensity = 0.02  -- Very subtle light rays
-			sunRays.Spread = 0.1  -- Tight spread
-			shaderEffects.sunRays = sunRays
-
-			-- Ensure all lights cast proper shadows
-			for _, light in pairs(a:GetChildren()) do
-				if light:IsA("Light") then
-					light.Shadows = true
-					if light:IsA("SpotLight") then
-						light.Angle = 60  -- Realistic spotlight angle
-					end
-				end
-			end
-
-			-- Dynamic Time of Day System
-			shaderEffects.timeOfDay = RunService.Heartbeat:Connect(function()
-				if shaderEnabled then
-					local currentTime = a.ClockTime
-					-- Adjust lighting based on time of day
-					if currentTime >= 6 and currentTime <= 18 then  -- Daytime
-						a.Brightness = math.lerp(1.5, 2.0, (currentTime - 6) / 12)
-						a.Ambient = Color3.fromRGB(
-							math.floor(25 + (currentTime - 6) * 2),
-							math.floor(28 + (currentTime - 6) * 2),
-							math.floor(35 + (currentTime - 6) * 2)
-						)
-					else  -- Nighttime
-						a.Brightness = 0.8
-						a.Ambient = Color3.fromRGB(15, 18, 25)
+			-- Add shadow
+			local shadow = Instance.new("ImageLabel", iconFrame)
+			shadow.Size = UDim2.new(1, 0, 1, 0)
+			shadow.BackgroundTransparency = 1
+			shadow.Image = "rbxassetid://1316045217" -- Soft shadow
+			shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+			shadow.ImageTransparency = 0.8
+			shadow.ScaleType = Enum.ScaleType.Slice
+			shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+			shadow.SliceScale = 0.2
+			
+			-- Add image
+			local imageLabel = Instance.new("ImageLabel", iconFrame)
+			imageLabel.Size = UDim2.new(0.8, 0, 0.8, 0)
+			imageLabel.Position = UDim2.new(0.1, 0, 0.1, 0)
+			imageLabel.BackgroundTransparency = 1
+			imageLabel.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png" -- Placeholder
+			imageLabel.ScaleType = Enum.ScaleType.Fit
+			
+			-- Try to set the actual image
+			pcall(function()
+				-- For security, Roblox doesn't allow direct external image loading
+				-- In a real scenario, you'd need to use Roblox Asset IDs
+				-- This is a workaround using a placeholder with custom graphics
+				
+				-- Create a decorative placeholder
+				local gradient = Instance.new("UIGradient", imageLabel)
+				gradient.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 150, 255)),
+					ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 100, 255))
+				})
+				gradient.Rotation = 45
+				
+				-- Add icon symbol
+				local iconText = Instance.new("TextLabel", imageLabel)
+				iconText.Size = UDim2.new(1, 0, 1, 0)
+				iconText.Text = "✨"
+				iconText.Font = Enum.Font.GothamBold
+				iconText.TextSize = 24
+				iconText.TextColor3 = Color3.fromRGB(255, 255, 255)
+				iconText.BackgroundTransparency = 1
+				iconText.TextTransparency = 0.2
+			end)
+			
+			-- Add hover effects
+			local isHovering = false
+			iconFrame.MouseEnter:Connect(function()
+				isHovering = true
+				TweenService:Create(iconFrame, TweenInfo.new(0.2), {
+					Size = UDim2.new(0, 65, 0, 65),
+					BackgroundTransparency = 0
+				}):Play()
+				TweenService:Create(uiStroke, TweenInfo.new(0.2), {
+					Thickness = 2.5,
+					Transparency = 0.1
+				}):Play()
+			end)
+			
+			iconFrame.MouseLeave:Connect(function()
+				isHovering = false
+				TweenService:Create(iconFrame, TweenInfo.new(0.2), {
+					Size = UDim2.new(0, 60, 0, 60),
+					BackgroundTransparency = 0.1
+				}):Play()
+				TweenService:Create(uiStroke, TweenInfo.new(0.2), {
+					Thickness = 1.5,
+					Transparency = 0.3
+				}):Play()
+			end)
+			
+			-- Click handler to open main GUI
+			iconFrame.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					TweenService:Create(iconFrame, TweenInfo.new(0.1), {
+						Size = UDim2.new(0, 55, 0, 55)
+					}):Play()
+					task.wait(0.1)
+					TweenService:Create(iconFrame, TweenInfo.new(0.1), {
+						Size = UDim2.new(0, 60, 0, 60)
+					}):Play()
+					
+					-- Only show popup if it hasn't been shown before
+					if not _G.popupShown then
+						_G.popupShown = true
+						createTelegramPopup()
 					end
 				end
 			end)
+			
+			-- Add smooth dragging
+			local dragInput, dragStart, startPos
+			local dragging = false
+			
+			local function update(input)
+				local delta = input.Position - dragStart
+				iconFrame.Position = UDim2.new(
+					startPos.X.Scale,
+					startPos.X.Offset + delta.X,
+					startPos.Y.Scale,
+					startPos.Y.Offset + delta.Y
+				)
+			end
+			
+			iconFrame.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					dragging = true
+					dragStart = input.Position
+					startPos = iconFrame.Position
+					
+					input.Changed:Connect(function()
+						if input.UserInputState == Enum.UserInputState.End then
+							dragging = false
+						end
+					end)
+				end
+			end)
+			
+			iconFrame.InputChanged:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+					dragInput = input
+				end
+			end)
+			
+			UserInputService.InputChanged:Connect(function(input)
+				if input == dragInput and dragging then
+					update(input)
+				end
+			end)
+			
+			-- Add auto-snap to screen edges
+			iconFrame.Changed:Connect(function()
+				if not dragging then
+					local viewportSize = workspace.CurrentCamera.ViewportSize
+					local pos = iconFrame.AbsolutePosition
+					local size = iconFrame.AbsoluteSize
+					
+					if pos.X < 0 then
+						iconFrame.Position = UDim2.new(0, 10, iconFrame.Position.Y.Scale, iconFrame.Position.Y.Offset)
+					elseif pos.X + size.X > viewportSize.X then
+						iconFrame.Position = UDim2.new(
+							1, -(size.X + 10),
+							iconFrame.Position.Y.Scale,
+							iconFrame.Position.Y.Offset
+						)
+					end
+					
+					if pos.Y < 0 then
+						iconFrame.Position = UDim2.new(iconFrame.Position.X.Scale, iconFrame.Position.X.Offset, 0, 10)
+					elseif pos.Y + size.Y > viewportSize.Y then
+						iconFrame.Position = UDim2.new(
+							iconFrame.Position.X.Scale,
+							iconFrame.Position.X.Offset,
+							1, -(size.Y + 10)
+						)
+					end
+				end
+			end)
+			
+			-- Add subtle floating animation
+			task.spawn(function()
+				while iconFrame and iconFrame.Parent do
+					if not dragging and not isHovering then
+						local offset = Vector2.new(
+							math.sin(tick() * 0.5) * 1,
+							math.sin(tick() * 0.5 + 1) * 1
+						)
+						iconFrame.Position = iconFrame.Position + UDim2.new(0, offset.X, 0, offset.Y)
+					end
+					task.wait(0.05)
+				end
+			end)
+		else
+			warn("Failed to load icon image")
+		end
+	end)
+end
 
+----------------------------------------------------
+-- 2️⃣ TELEGRAM POPUP WITH BACKGROUND IMAGE
+----------------------------------------------------
+local function createTelegramPopup()
+	-- Check if popup should be shown
+	if _G.popupShown and _G.telegramClicked then
+		createMainGUI()
+		return
+	end
+	
+	-- Create overlay background
+	local overlay = Instance.new("Frame", gui)
+	overlay.Size = UDim2.new(1, 0, 1, 0)
+	overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	overlay.BackgroundTransparency = 0.5
+	overlay.ZIndex = 5
+	overlay.Name = "Overlay"
+	
+	-- Main popup container
+	local popup = Instance.new("Frame", overlay)
+	popup.Size = UDim2.new(0, 0, 0, 0)
+	popup.Position = UDim2.new(0.5, 0, 0.5, 0)
+	popup.AnchorPoint = Vector2.new(0.5, 0.5)
+	popup.BackgroundTransparency = 1
+	popup.ZIndex = 6
+	
+	-- Background image
+	local background = Instance.new("ImageLabel", popup)
+	background.Size = UDim2.new(1, 0, 1, 0)
+	background.Image = "rbxassetid://1234567890" -- You'll need a valid Roblox asset ID
+	background.ScaleType = Enum.ScaleType.Crop
+	background.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+	
+	-- Create gradient overlay
+	local gradient = Instance.new("UIGradient", background)
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 25)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(15, 15, 25, 0.7)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
+	})
+	
+	local uiCorner = Instance.new("UICorner", background)
+	uiCorner.CornerRadius = UDim.new(0, 24)
+	
+	-- Content container
+	local content = Instance.new("Frame", popup)
+	content.Size = UDim2.new(1, -40, 1, -40)
+	content.Position = UDim2.new(0, 20, 0, 20)
+	content.BackgroundTransparency = 1
+	content.ZIndex = 7
+	
+	-- Animate popup opening
+	popup:TweenSize(UDim2.new(0, 400, 0, 300), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.6, true)
+	
+	-- Title with modern font
+	local title = Instance.new("TextLabel", content)
+	title.Size = UDim2.new(1, 0, 0, 60)
+	title.BackgroundTransparency = 1
+	title.Text = "Join Our Community"
+	title.Font = Enum.Font.GothamSemibold
+	title.TextSize = 28
+	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.TextTransparency = 0
+	title.ZIndex = 8
+	
+	-- Description
+	local description = Instance.new("TextLabel", content)
+	description.Size = UDim2.new(1, 0, 0, 60)
+	description.Position = UDim2.new(0, 0, 0, 70)
+	description.BackgroundTransparency = 1
+	description.Text = "Get exclusive scripts, updates, and community support"
+	description.Font = Enum.Font.Gotham
+	description.TextSize = 16
+	description.TextColor3 = Color3.fromRGB(200, 200, 220)
+	description.TextWrapped = true
+	description.ZIndex = 8
+	
+	-- Telegram link button with modern design
+	local telegramBtn = Instance.new("TextButton", content)
+	telegramBtn.Size = UDim2.new(1, 0, 0, 55)
+	telegramBtn.Position = UDim2.new(0, 0, 0, 150)
+	telegramBtn.BackgroundColor3 = Color3.fromRGB(34, 158, 217) -- Telegram blue
+	telegramBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	telegramBtn.Text = "Join Telegram Group"
+	telegramBtn.Font = Enum.Font.GothamSemibold
+	telegramBtn.TextSize = 18
+	telegramBtn.ZIndex = 8
+	
+	local btnCorner = Instance.new("UICorner", telegramBtn)
+	btnCorner.CornerRadius = UDim.new(0, 12)
+	
+	local btnStroke = Instance.new("UIStroke", telegramBtn)
+	btnStroke.Color = Color3.fromRGB(255, 255, 255)
+	btnStroke.Thickness = 1.5
+	btnStroke.Transparency = 0.5
+	
+	-- Add telegram icon
+	local icon = Instance.new("TextLabel", telegramBtn)
+	icon.Size = UDim2.new(0, 30, 0, 30)
+	icon.Position = UDim2.new(0, 20, 0.5, -15)
+	icon.Text = "✈️"
+	icon.Font = Enum.Font.GothamBold
+	icon.TextSize = 20
+	icon.BackgroundTransparency = 1
+	icon.TextColor3 = Color3.fromRGB(255, 255, 255)
+	icon.ZIndex = 9
+	
+	-- Continue without joining button
+	local continueBtn = Instance.new("TextButton", content)
+	continueBtn.Size = UDim2.new(1, 0, 0, 45)
+	continueBtn.Position = UDim2.new(0, 0, 0, 220)
+	continueBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	continueBtn.TextColor3 = Color3.fromRGB(180, 180, 200)
+	continueBtn.Text = "Continue Without Joining"
+	continueBtn.Font = Enum.Font.Gotham
+	continueBtn.TextSize = 14
+	continueBtn.ZIndex = 8
+	
+	local continueCorner = Instance.new("UICorner", continueBtn)
+	continueCorner.CornerRadius = UDim.new(0, 10)
+	
+	-- Hover effects
+	telegramBtn.MouseEnter:Connect(function()
+		TweenService:Create(telegramBtn, TweenInfo.new(0.2), {
+			BackgroundColor3 = Color3.fromRGB(40, 175, 240),
+			Size = UDim2.new(1, 5, 0, 58)
+		}):Play()
+	end)
+	
+	telegramBtn.MouseLeave:Connect(function()
+		TweenService:Create(telegramBtn, TweenInfo.new(0.2), {
+			BackgroundColor3 = Color3.fromRGB(34, 158, 217),
+			Size = UDim2.new(1, 0, 0, 55)
+		}):Play()
+	end)
+	
+	-- Button handlers
+	telegramBtn.MouseButton1Click:Connect(function()
+		_G.telegramClicked = true
+		
+		-- Open in browser
+		local url = "https://t.me/RBLX_SCRIPTS_MYANMAR"
+		pcall(function()
+			if request then
+				request({
+					Url = "http://localhost:6463/rpc?v=1",
+					Method = "POST",
+					Headers = {
+						["Content-Type"] = "application/json",
+						["Origin"] = "https://discord.com"
+					},
+					Body = game:GetService("HttpService"):JSONEncode({
+						cmd = "INVITE_BROWSER",
+						args = {code = url},
+						nonce = game:GetService("HttpService"):GenerateGUID(false)
+					})
+				})
+			end
+		end)
+		
+		-- Try clipboard as fallback
+		pcall(function()
+			if setclipboard then
+				setclipboard(url)
+			elseif writeclipboard then
+				writeclipboard(url)
+			end
+			telegramBtn.Text = "Link Copied!"
+		end)
+		
+		-- Close popup and open main GUI
+		popup:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.4, true)
+		overlay:TweenSizeAndPosition(
+			UDim2.new(0, 0, 0, 0),
+			UDim2.new(0.5, 0, 0.5, 0),
+			Enum.EasingDirection.In,
+			Enum.EasingStyle.Back,
+			0.4,
+			true
+		)
+		task.wait(0.4)
+		popup:Destroy()
+		overlay:Destroy()
+		
+		createMainGUI()
+	end)
+	
+	continueBtn.MouseButton1Click:Connect(function()
+		_G.telegramClicked = false
+		popup:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.4, true)
+		overlay:TweenSizeAndPosition(
+			UDim2.new(0, 0, 0, 0),
+			UDim2.new(0.5, 0, 0.5, 0),
+			Enum.EasingDirection.In,
+			Enum.EasingStyle.Back,
+			0.4,
+			true
+		)
+		task.wait(0.4)
+		popup:Destroy()
+		overlay:Destroy()
+		
+		createMainGUI()
+	end)
+end
+
+----------------------------------------------------
+-- 3️⃣ MAIN ENHANCER GUI
+----------------------------------------------------
+local function createMainGUI()
+	local frame = Instance.new("Frame", gui)
+	frame.Size = UDim2.new(0, 300, 0, 220)
+	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	frame.AnchorPoint = Vector2.new(0.5, 0.5)
+	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+	frame.Active = true
+	frame.Draggable = true
+	frame.BorderSizePixel = 0
+	frame.Name = "EnhancerGUI"
+	
+	local uiCorner = Instance.new("UICorner", frame)
+	uiCorner.CornerRadius = UDim.new(0, 20)
+	
+	local uiStroke = Instance.new("UIStroke", frame)
+	uiStroke.Color = Color3.fromRGB(60, 60, 80)
+	uiStroke.Thickness = 2
+	
+	-- Add shadow
+	local shadow = Instance.new("ImageLabel", frame)
+	shadow.Size = UDim2.new(1, 20, 1, 20)
+	shadow.Position = UDim2.new(0, -10, 0, -10)
+	shadow.Image = "rbxassetid://1316045217"
+	shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+	shadow.ImageTransparency = 0.8
+	shadow.ScaleType = Enum.ScaleType.Slice
+	shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+	shadow.BackgroundTransparency = 1
+	shadow.ZIndex = -1
+	
+	-- Animate opening
+	frame:TweenSize(UDim2.new(0, 320, 0, 240), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.5, true)
+	
+	-- Title bar
+	local titleBar = Instance.new("Frame", frame)
+	titleBar.Size = UDim2.new(1, 0, 0, 40)
+	titleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+	titleBar.BorderSizePixel = 0
+	
+	local titleCorner = Instance.new("UICorner", titleBar)
+	titleCorner.CornerRadius = UDim.new(0, 20, 0, 0)
+	
+	local title = Instance.new("TextLabel", titleBar)
+	title.Size = UDim2.new(1, -40, 1, 0)
+	title.Position = UDim2.new(0, 10, 0, 0)
+	title.BackgroundTransparency = 1
+	title.Text = "Game Enhancer v2.0"
+	title.Font = Enum.Font.GothamSemibold
+	title.TextSize = 18
+	title.TextColor3 = Color3.fromRGB(220, 220, 255)
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	
+	-- Close button
+	local closeBtn = Instance.new("TextButton", titleBar)
+	closeBtn.Size = UDim2.new(0, 30, 0, 30)
+	closeBtn.Position = UDim2.new(1, -35, 0.5, -15)
+	closeBtn.Text = "✕"
+	closeBtn.Font = Enum.Font.GothamBold
+	closeBtn.TextSize = 16
+	closeBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+	closeBtn.BackgroundTransparency = 1
+	
+	closeBtn.MouseButton1Click:Connect(function()
+		frame:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.3, true)
+		task.wait(0.3)
+		frame:Destroy()
+	end)
+	
+	-- Content area
+	local content = Instance.new("Frame", frame)
+	content.Size = UDim2.new(1, -20, 1, -60)
+	content.Position = UDim2.new(0, 10, 0, 50)
+	content.BackgroundTransparency = 1
+	
+	----------------------------------------------------
+	-- SHADER TOGGLE BUTTON
+	----------------------------------------------------
+	local shaderEnabled = false
+	local shaderEffects = {}
+	
+	local shaderBtn = Instance.new("TextButton", content)
+	shaderBtn.Size = UDim2.new(1, 0, 0, 50)
+	shaderBtn.Position = UDim2.new(0, 0, 0, 0)
+	shaderBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+	shaderBtn.TextColor3 = Color3.fromRGB(220, 220, 255)
+	shaderBtn.Font = Enum.Font.GothamSemibold
+	shaderBtn.TextSize = 16
+	shaderBtn.Text = "Enable Shader"
+	
+	local shaderCorner = Instance.new("UICorner", shaderBtn)
+	shaderCorner.CornerRadius = UDim.new(0, 12)
+	
+	local shaderStroke = Instance.new("UIStroke", shaderBtn)
+	shaderStroke.Color = Color3.fromRGB(80, 120, 255)
+	shaderStroke.Thickness = 2
+	
+	-- Shader status indicator
+	local shaderIndicator = Instance.new("Frame", shaderBtn)
+	shaderIndicator.Size = UDim2.new(0, 10, 0, 10)
+	shaderIndicator.Position = UDim2.new(1, -25, 0.5, -5)
+	shaderIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+	
+	local indicatorCorner = Instance.new("UICorner", shaderIndicator)
+	indicatorCorner.CornerRadius = UDim.new(1, 0)
+	
+	local function toggleShader()
+		if not shaderEnabled then
+			-- Enable shader (same as before but optimized)
+			local lighting = game.Lighting
+			
+			-- Store original values
+			shaderEffects.originals = {
+				Ambient = lighting.Ambient,
+				Brightness = lighting.Brightness,
+				ClockTime = lighting.ClockTime
+			}
+			
+			-- Apply enhanced shader
+			lighting.Ambient = Color3.fromRGB(25, 28, 35)
+			lighting.Brightness = 1.8
+			lighting.ColorShift_Bottom = Color3.fromRGB(8, 10, 15)
+			lighting.ColorShift_Top = Color3.fromRGB(180, 200, 220)
+			lighting.EnvironmentDiffuseScale = 0.6
+			lighting.EnvironmentSpecularScale = 0.25
+			lighting.GlobalShadows = true
+			lighting.ShadowSoftness = 0.08
+			lighting.OutdoorAmbient = Color3.fromRGB(90, 105, 125)
+			lighting.GeographicLatitude = 45.0
+			lighting.ExposureCompensation = 0.15
+			lighting.ClockTime = 14
+			lighting.ShadowColor = Color3.fromRGB(12, 15, 20)
+			
+			-- Create effects
+			local function createEffect(className, properties)
+				local effect = Instance.new(className, lighting)
+				for prop, value in pairs(properties) do
+					effect[prop] = value
+				end
+				table.insert(shaderEffects, effect)
+				return effect
+			end
+			
+			createEffect("BloomEffect", {
+				Intensity = 0.25,
+				Size = 32,
+				Threshold = 0.9
+			})
+			
+			createEffect("ColorCorrectionEffect", {
+				Brightness = 0.05,
+				Contrast = 0.35,
+				Saturation = 0.1,
+				TintColor = Color3.fromRGB(255, 248, 235)
+			})
+			
+			createEffect("DepthOfFieldEffect", {
+				FarIntensity = 0.15,
+				FocusDistance = 35.0,
+				InFocusRadius = 25.0,
+				NearIntensity = 0.1
+			})
+			
+			createEffect("Atmosphere", {
+				Density = 0.35,
+				Offset = 0.5,
+				Color = Color3.fromRGB(170, 190, 220),
+				Decay = Color3.fromRGB(110, 130, 170),
+				Glare = 0.1,
+				Haze = 0.15
+			})
+			
 			shaderEnabled = true
 			shaderBtn.Text = "Disable Shader"
-			TweenService:Create(shaderBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255, 100, 100), TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+			TweenService:Create(shaderBtn, TweenInfo.new(0.3), {
+				BackgroundColor3 = Color3.fromRGB(60, 100, 180)
+			}):Play()
+			TweenService:Create(shaderIndicator, TweenInfo.new(0.3), {
+				BackgroundColor3 = Color3.fromRGB(50, 255, 100)
+			}):Play()
 		else
-			-- Disable Shader
-			for _, effect in pairs(shaderEffects) do
-				if effect and effect.Parent then
-					if effect.Disconnect then
-						effect:Disconnect()  -- Disconnect connections
-					else
-						effect:Destroy()  -- Destroy instances
-					end
+			-- Disable shader
+			for _, effect in ipairs(shaderEffects) do
+				if effect then
+					effect:Destroy()
 				end
 			end
 			shaderEffects = {}
 			
-			-- Reset lighting to default
-			local a = game.Lighting
-			a.Ambient = Color3.fromRGB(0.5, 0.5, 0.5)
-			a.Brightness = 1
-			a.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
-			a.ColorShift_Top = Color3.fromRGB(0, 0, 0)
-			a.EnvironmentDiffuseScale = 1
-			a.EnvironmentSpecularScale = 1
-			a.GlobalShadows = true
-			a.OutdoorAmbient = Color3.fromRGB(127.5, 127.5, 127.5)
-			a.ShadowSoftness = 0.1
-			a.ShadowColor = Color3.fromRGB(0, 0, 0)
-			a.GeographicLatitude = 41.73
-			a.ExposureCompensation = 0
-			a.ClockTime = 14
+			-- Restore original values
+			local lighting = game.Lighting
+			if shaderEffects.originals then
+				for prop, value in pairs(shaderEffects.originals) do
+					lighting[prop] = value
+				end
+			end
 			
 			shaderEnabled = false
 			shaderBtn.Text = "Enable Shader"
-			TweenService:Create(shaderBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255,255,255), TextColor3 = Color3.fromRGB(0,0,0)}):Play()
+			TweenService:Create(shaderBtn, TweenInfo.new(0.3), {
+				BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+			}):Play()
+			TweenService:Create(shaderIndicator, TweenInfo.new(0.3), {
+				BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+			}):Play()
 		end
-	end)
-
+	end
+	
+	shaderBtn.MouseButton1Click:Connect(toggleShader)
+	
 	----------------------------------------------------
-	-- FPS BOOST BUTTON (no ON/OFF)
+	-- FPS BOOST BUTTON
 	----------------------------------------------------
-	local fpsBtn = Instance.new("TextButton")
-	fpsBtn.Size = UDim2.new(0.85, 0, 0, 45)
-	fpsBtn.Position = UDim2.new(0.075, 0, 0.6, 0)
-	fpsBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	fpsBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-	fpsBtn.Font = Enum.Font.GothamBold
-	fpsBtn.TextSize = 18
-	fpsBtn.Text = "Boost FPS"
-	Instance.new("UICorner", fpsBtn).CornerRadius = UDim.new(0, 10)
-	fpsBtn.Parent = frame
-
+	local fpsBtn = Instance.new("TextButton", content)
+	fpsBtn.Size = UDim2.new(1, 0, 0, 50)
+	fpsBtn.Position = UDim2.new(0, 0, 0, 60)
+	fpsBtn.BackgroundColor3 = Color3.fromRGB(50, 60, 80)
+	fpsBtn.TextColor3 = Color3.fromRGB(220, 220, 255)
+	fpsBtn.Font = Enum.Font.GothamSemibold
+	fpsBtn.TextSize = 16
+	fpsBtn.Text = "Optimize Performance"
+	
+	local fpsCorner = Instance.new("UICorner", fpsBtn)
+	fpsCorner.CornerRadius = UDim.new(0, 12)
+	
+	local fpsStroke = Instance.new("UIStroke", fpsBtn)
+	fpsStroke.Color = Color3.fromRGB(100, 200, 100)
+	fpsStroke.Thickness = 2
+	
 	fpsBtn.MouseButton1Click:Connect(function()
+		-- Optimize performance
 		for _, v in pairs(workspace:GetDescendants()) do
-			if v:IsA("BasePart") then v.Material = Enum.Material.SmoothPlastic end
-			if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+			if v:IsA("BasePart") and v.Material ~= Enum.Material.SmoothPlastic then
+				v.Material = Enum.Material.SmoothPlastic
+			end
+			if v:IsA("ParticleEmitter") or v:IsA("Trail") then
+				v.Enabled = false
+			end
 		end
-		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-		-- Keep basic shadows for visual quality
+		
+		settings().Rendering.QualityLevel = 1
 		game.Lighting.GlobalShadows = true
 		game.Lighting.FogEnd = 100000
-
-		fpsBtn.Text = "Boosted!"
-		TweenService:Create(fpsBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(0, 200, 100), TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+		
+		fpsBtn.Text = "Optimized!"
+		TweenService:Create(fpsBtn, TweenInfo.new(0.3), {
+			BackgroundColor3 = Color3.fromRGB(50, 180, 80)
+		}):Play()
 		task.wait(1.5)
-		fpsBtn.Text = "Boost FPS"
-		TweenService:Create(fpsBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255,255,255), TextColor3 = Color3.fromRGB(0,0,0)}):Play()
+		fpsBtn.Text = "Optimize Performance"
+		TweenService:Create(fpsBtn, TweenInfo.new(0.3), {
+			BackgroundColor3 = Color3.fromRGB(50, 60, 80)
+		}):Play()
 	end)
-
+	
 	----------------------------------------------------
-	-- 📊 FPS COUNTER
+	-- FPS COUNTER
 	----------------------------------------------------
-	local fpsLabel = Instance.new("TextLabel")
+	local fpsLabel = Instance.new("TextLabel", content)
 	fpsLabel.Size = UDim2.new(1, 0, 0, 30)
-	fpsLabel.Position = UDim2.new(0, 0, 0.85, 0)
+	fpsLabel.Position = UDim2.new(0, 0, 0, 120)
 	fpsLabel.BackgroundTransparency = 1
-	fpsLabel.Font = Enum.Font.GothamBold
-	fpsLabel.TextSize = 16
-	fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 120)
-	fpsLabel.Text = "FPS: ..."
-	fpsLabel.Parent = frame
-
-	-- FPS Update Loop
+	fpsLabel.Font = Enum.Font.GothamSemibold
+	fpsLabel.TextSize = 14
+	fpsLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
+	fpsLabel.Text = "FPS: --"
+	fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
+	
+	-- FPS graph
+	local graphFrame = Instance.new("Frame", content)
+	graphFrame.Size = UDim2.new(1, 0, 0, 20)
+	graphFrame.Position = UDim2.new(0, 0, 0, 155)
+	graphFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+	
+	local graphCorner = Instance.new("UICorner", graphFrame)
+	graphCorner.CornerRadius = UDim.new(0, 6)
+	
+	local graphStroke = Instance.new("UIStroke", graphFrame)
+	graphStroke.Color = Color3.fromRGB(60, 60, 80)
+	
+	-- FPS update loop
 	local last = tick()
 	local frames = 0
+	local fpsHistory = {}
+	local maxHistory = 20
+	
 	RunService.RenderStepped:Connect(function()
 		frames += 1
-		if tick() - last >= 1 then
-			fpsLabel.Text = "FPS: " .. tostring(frames)
+		local now = tick()
+		
+		if now - last >= 1 then
+			local currentFPS = frames
+			fpsLabel.Text = string.format("FPS: %d", currentFPS)
+			
+			-- Color coding
+			if currentFPS >= 60 then
+				fpsLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
+			elseif currentFPS >= 30 then
+				fpsLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+			else
+				fpsLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+			end
+			
+			-- Update graph
+			table.insert(fpsHistory, currentFPS)
+			if #fpsHistory > maxHistory then
+				table.remove(fpsHistory, 1)
+			end
+			
+			-- Draw graph bars
+			for _, child in ipairs(graphFrame:GetChildren()) do
+				if child:IsA("Frame") then
+					child:Destroy()
+				end
+			end
+			
+			local maxFPS = math.max(unpack(fpsHistory)) or 60
+			local barWidth = graphFrame.AbsoluteSize.X / #fpsHistory
+			
+			for i, fps in ipairs(fpsHistory) do
+				local bar = Instance.new("Frame", graphFrame)
+				bar.Size = UDim2.new(0, math.max(2, barWidth - 2), 1, 0)
+				bar.Position = UDim2.new((i - 1) * barWidth / graphFrame.AbsoluteSize.X, 1, 0, 0)
+				bar.BackgroundColor3 = Color3.fromHSV(0.3 * (fps / maxFPS), 0.8, 1)
+				bar.BorderSizePixel = 0
+				
+				local barCorner = Instance.new("UICorner", bar)
+				barCorner.CornerRadius = UDim.new(0, 2)
+			end
+			
 			frames = 0
-			last = tick()
+			last = now
 		end
 	end)
+	
+	-- Add hover effects for all buttons
+	local buttons = {shaderBtn, fpsBtn}
+	for _, button in ipairs(buttons) do
+		button.MouseEnter:Connect(function()
+			TweenService:Create(button, TweenInfo.new(0.2), {
+				BackgroundTransparency = 0.1,
+				Size = UDim2.new(1, 5, 0, 52)
+			}):Play()
+		end)
+		
+		button.MouseLeave:Connect(function()
+			TweenService:Create(button, TweenInfo.new(0.2), {
+				BackgroundTransparency = 0,
+				Size = UDim2.new(1, 0, 0, 50)
+			}):Play()
+		end)
+	end
+end
+
+----------------------------------------------------
+-- INITIALIZATION
+----------------------------------------------------
+-- Initialize globals if not exists
+_G.popupShown = _G.popupShown or false
+_G.telegramClicked = _G.telegramClicked or false
+
+-- Create the movable icon first
+createMovableIcon()
+
+-- Show popup only if not shown before
+if not _G.popupShown then
+	task.wait(1) -- Wait a moment for icon to load
+	createTelegramPopup()
+else
+	-- If popup was already shown, create main GUI directly
+	createMainGUI()
+end
+
+-- Add auto-save position for icon
+game:GetService("UserInputService").WindowFocusReleased:Connect(function()
+	-- Save icon position when window loses focus
+	local icon = gui:FindFirstChild("MovableIcon")
+	if icon then
+		_G.iconPosition = {
+			X = icon.Position.X.Scale,
+			XOffset = icon.Position.X.Offset,
+			Y = icon.Position.Y.Scale,
+			YOffset = icon.Position.Y.Offset
+		}
+	end
 end)
