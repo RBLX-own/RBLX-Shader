@@ -1,358 +1,337 @@
-local IMAGE_ID = "rbxassetid://121158130775447"  -- ← Replace with your uploaded asset ID
+-- RBLX Scripts Myanmar Hub - Modern GUI Script (LocalScript)
+-- Place this in StarterPlayer > StarterPlayerScripts
+-- Works best with executors that support setclipboard() (most do)
 
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
+local StarterGui = game:GetService("StarterGui")
+local SoundService = game:GetService("SoundService")
 
 local player = Players.LocalPlayer
-local gui = Instance.new("ScreenGui")
-gui.Name = "ModernEnhancer"
-gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
+local playerGui = player:WaitForChild("PlayerGui")
 
--- Sounds
-local clickSound = Instance.new("Sound", gui); clickSound.SoundId = "rbxassetid://142376088"; clickSound.Volume = 0.5
-local hoverSound = Instance.new("Sound", gui); hoverSound.SoundId = "rbxassetid://258705265"; hoverSound.Volume = 0.3
-local openSound  = Instance.new("Sound", gui); openSound.SoundId  = "rbxassetid://1070980695"; openSound.Volume = 0.4
-local closeSound = Instance.new("Sound", gui); closeSound.SoundId = "rbxassetid://1070980574"; closeSound.Volume = 0.4
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MyanmarHub"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
 
--- ==================== ICON (Floating Squircle) ====================
-local icon = Instance.new("ImageButton")
-icon.Name = "RBLXIcon"
-icon.Size = UDim2.new(0, 64, 0, 64)
-icon.AnchorPoint = Vector2.new(0.5, 0.5)
-icon.Position = UDim2.new(0.5, 0, 0.5, 0)
-icon.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-icon.BackgroundTransparency = 0.15
-icon.BorderSizePixel = 0
-icon.Image = IMAGE_ID
-icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
-icon.ZIndex = 10
-icon.Parent = gui
+-- ===================== TELEGRAM FULLSCREEN =====================
+local telegramFrame = Instance.new("Frame")
+telegramFrame.Size = UDim2.new(1, 0, 1, 0)
+telegramFrame.BackgroundColor3 = Color3.fromRGB(10, 25, 45)
+telegramFrame.Parent = screenGui
 
-local iconCorner = Instance.new("UICorner", icon); iconCorner.CornerRadius = UDim.new(0, 22)
-local iconGradient = Instance.new("UIGradient", icon)
-iconGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 200, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 150, 255))
-}
-iconGradient.Rotation = 45
-local iconStroke = Instance.new("UIStroke", icon)
-iconStroke.Color = Color3.fromRGB(100, 200, 255)
-iconStroke.Thickness = 2.5
-iconStroke.Transparency = 0.4
+local bg = Instance.new("ImageLabel")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.Image = "rbxassetid://121158130775447"
+bg.ImageTransparency = 0.5
+bg.BackgroundTransparency = 1
+bg.Parent = telegramFrame
 
--- Icon tweens
-local hoverTween = TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(0,78,0,78), Rotation = 360})
-local leaveTween = TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = UDim2.new(0,64,0,64), Rotation = 0})
-local pulseTween = TweenService:Create(icon, TweenInfo.new(1.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0,72,0,72)})
+local telegramLogo = Instance.new("ImageLabel") -- Use a nice Telegram icon (public asset)
+telegramLogo.Size = UDim2.new(0, 180, 0, 180)
+telegramLogo.Position = UDim2.new(0.5, -90, 0.25, -90)
+telegramLogo.Image = "rbxassetid://6031094678" -- Public Telegram paper plane icon
+telegramLogo.BackgroundTransparency = 1
+telegramLogo.Parent = telegramFrame
 
--- Dragging
-local dragging, dragStart, startPos = false, nil, nil
-local dragDistance = 0
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(0.9, 0, 0.1, 0)
+title.Position = UDim2.new(0.05, 0, 0.45, 0)
+title.Text = "Join Our Community!"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.BackgroundTransparency = 1
+title.Parent = telegramFrame
 
-icon.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = icon.Position
-        dragDistance = 0
-        TweenService:Create(icon, TweenInfo.new(0.15), {Size = UDim2.new(0,58,0,58)}):Play()
-        TweenService:Create(iconStroke, TweenInfo.new(0.15), {Thickness = 1.5}):Play()
-        clickSound:Play()
-    end
-end)
+local linkLabel = Instance.new("TextLabel")
+linkLabel.Size = UDim2.new(0.7, 0, 0.07, 0)
+linkLabel.Position = UDim2.new(0.15, 0, 0.58, 0)
+linkLabel.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
+linkLabel.TextColor3 = Color3.fromRGB(0, 191, 255)
+linkLabel.TextScaled = true
+linkLabel.Font = Enum.Font.Gotham
+linkLabel.BackgroundTransparency = 1
+linkLabel.Parent = telegramFrame
 
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        dragDistance = math.max(dragDistance, delta.Magnitude)
-        icon.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
+local joinButton = Instance.new("TextButton")
+joinButton.Size = UDim2.new(0.4, 0, 0.09, 0)
+joinButton.Position = UDim2.new(0.3, 0, 0.7, 0)
+joinButton.Text = "Join Telegram"
+joinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+joinButton.BackgroundColor3 = Color3.fromRGB(0, 136, 204)
+joinButton.Font = Enum.Font.GothamBold
+joinButton.TextScaled = true
+joinButton.Parent = telegramFrame
 
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
-        dragging = false
-        TweenService:Create(icon, TweenInfo.new(0.25, Enum.EasingStyle.Back), {Size = UDim2.new(0,64,0,64)}):Play()
-        TweenService:Create(iconStroke, TweenInfo.new(0.25), {Thickness = 2.5}):Play()
+local joinCorner = Instance.new("UICorner", joinButton)
+joinCorner.CornerRadius = UDim.new(0, 15)
+local joinStroke = Instance.new("UIStroke", joinButton)
+joinStroke.Color = Color3.fromRGB(255, 255, 255)
+joinStroke.Thickness = 3
 
-        -- Snap to screen edges
-        local cam = workspace.CurrentCamera
-        local ss = cam.ViewportSize
-        local absPos = icon.AbsolutePosition
-        local absSize = icon.AbsoluteSize
-        local margin = 20
-        local tx = absPos.X < ss.X*0.3 and margin or (absPos.X + absSize.X > ss.X*0.7 and ss.X - absSize.X - margin or absPos.X)
-        local ty = absPos.Y < ss.Y*0.3 and margin or (absPos.Y + absSize.Y > ss.Y*0.7 and ss.Y - absSize.Y - margin or absPos.Y)
+local continueButton = Instance.new("TextButton")
+continueButton.Size = UDim2.new(0.35, 0, 0.09, 0)
+continueButton.Position = UDim2.new(0.325, 0, 0.82, 0)
+continueButton.Text = "Continue →"
+continueButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+continueButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+continueButton.Font = Enum.Font.GothamBlack
+continueButton.TextScaled = true
+continueButton.Parent = telegramFrame
 
-        TweenService:Create(icon, TweenInfo.new(0.45, Enum.EasingStyle.Back), {Position = UDim2.new(0, tx, 0, ty)}):Play()
+local contCorner = Instance.new("UICorner", continueButton)
+contCorner.CornerRadius = UDim.new(0, 15)
 
-        if dragDistance < 12 then
-            toggleEnhancer()
-        end
-    end
-end)
-
-icon.MouseEnter:Connect(function() if not dragging then hoverTween:Play() hoverSound:Play() end end)
-icon.MouseLeave:Connect(function() if not dragging then leaveTween:Play() end end)
-pulseTween:Play()
-
--- ==================== ENHANCER FUNCTIONS ====================
-local enhancer, isOpen = nil, false
-
-function showIcon()
-    icon.Size = UDim2.new(0,0,0,0)
-    icon.Visible = true
-    TweenService:Create(icon, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0,64,0,64)}):Play()
-    openSound:Play()
-end
-
-function toggleEnhancer()
-    if not isOpen then
-        if not enhancer then createEnhancer() end
-        icon.Visible = false
-        enhancer.Visible = true
-        enhancer.Size = UDim2.new(0,0,0,0)
-        TweenService:Create(enhancer, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0,320,0,240)}):Play()
-        openSound:Play()
-        isOpen = true
-    else
-        TweenService:Create(enhancer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)}):Play()
-        closeSound:Play()
-        task.wait(0.4)
-        enhancer.Visible = false
-        icon.Visible = true
-        pulseTween:Play()
-        isOpen = false
-    end
-end
-
-function createEnhancer()
-    enhancer = Instance.new("Frame", gui)
-    enhancer.Name = "EnhancerFrame"
-    enhancer.Size = UDim2.new(0,320,0,240)
-    enhancer.Position = UDim2.new(0.5,0,0.5,0)
-    enhancer.AnchorPoint = Vector2.new(0.5,0.5)
-    enhancer.BackgroundColor3 = Color3.fromRGB(18,18,22)
-    enhancer.BorderSizePixel = 0
-    enhancer.ZIndex = 5
-    enhancer.Visible = false
-    enhancer.Active = true
-    enhancer.Draggable = true
-
-    local frameCorner = Instance.new("UICorner", enhancer); frameCorner.CornerRadius = UDim.new(0,18)
-    local frameStroke = Instance.new("UIStroke", enhancer); frameStroke.Color = Color3.fromRGB(80,200,255); frameStroke.Thickness = 1.5; frameStroke.Transparency = 0.6
-
-    -- Title bar
-    local titleBar = Instance.new("Frame", enhancer)
-    titleBar.Size = UDim2.new(1,0,0,48)
-    titleBar.BackgroundColor3 = Color3.fromRGB(25,25,30)
-    local tbCorner = Instance.new("UICorner", titleBar); tbCorner.CornerRadius = UDim.new(0,18)
-    local title = Instance.new("TextLabel", titleBar)
-    title.Size = UDim2.new(1,-90,1,0)
-    title.Position = UDim2.new(0,20,0,0)
-    title.BackgroundTransparency = 1
-    title.Text = "🚀 Game Enhancer"
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 20
-    title.TextColor3 = Color3.fromRGB(255,255,255)
-    title.TextXAlignment = Enum.TextXAlignment.Left
-
-    local closeBtn = Instance.new("TextButton", titleBar)
-    closeBtn.Size = UDim2.new(0,40,0,40)
-    closeBtn.Position = UDim2.new(1,-50,0.5,-20)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(255,80,80)
-    closeBtn.Text = "✕"
-    closeBtn.TextColor3 = Color3.new(1,1,1)
-    closeBtn.Font = Enum.Font.GothamBold
-    closeBtn.TextSize = 22
-    local cbCorner = Instance.new("UICorner", closeBtn); cbCorner.CornerRadius = UDim.new(0,10)
-
-    -- Buttons
-    local function createButton(text, posY, callback)
-        local btn = Instance.new("TextButton", enhancer)
-        btn.Size = UDim2.new(0.9,0,0,55)
-        btn.Position = UDim2.new(0.05,0,posY,0)
-        btn.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        btn.TextColor3 = Color3.fromRGB(20,20,20)
-        btn.Text = text
-        btn.Font = Enum.Font.GothamBold
-        btn.TextSize = 18
-        local btnCorner = Instance.new("UICorner", btn); btnCorner.CornerRadius = UDim.new(0,14)
-        local btnStroke = Instance.new("UIStroke", btn); btnStroke.Color = Color3.fromRGB(100,200,255); btnStroke.Thickness = 2
-        btn.MouseButton1Click:Connect(function()
-            clickSound:Play()
-            callback(btn)
-        end)
-        btn.MouseEnter:Connect(function() hoverSound:Play(); TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size + UDim2.new(0,8,0,4)}):Play() end)
-        btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), {Size = btn.Size - UDim2.new(0,8,0,4)}):Play() end)
-        return btn
-    end
-
-    -- Shader button (lighter version)
-    local shaderEnabled = false
-    local shaderEffects = {}
-    local shaderBtn = createButton("🌟 Enable Shader", 0.25, function(btn)
-        if not shaderEnabled then
-            local l = Lighting
-            l.Ambient = Color3.fromRGB(35,40,55)
-            l.Brightness = 1.6
-            l.OutdoorAmbient = Color3.fromRGB(100,115,140)
-            l.GlobalShadows = true
-
-            local bloom = Instance.new("BloomEffect", l); bloom.Intensity = 0.35; bloom.Size = 28; bloom.Threshold = 1
-            local cc = Instance.new("ColorCorrectionEffect", l); cc.Brightness = 0.08; cc.Contrast = 0.3; cc.Saturation = 0.2; cc.TintColor = Color3.fromRGB(245,248,255)
-            table.insert(shaderEffects, bloom); table.insert(shaderEffects, cc)
-
-            shaderEnabled = true
-            btn.Text = "🌟 Disable Shader"
-            TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255,90,90), TextColor3 = Color3.new(1,1,1)}):Play()
-        else
-            for _, ef in shaderEffects do pcall(function() ef:Destroy() end) end
-            shaderEffects = {}
-            Lighting.Ambient = Color3.fromRGB(70,70,70)
-            Lighting.Brightness = 1
-            shaderEnabled = false
-            btn.Text = "🌟 Enable Shader"
-            TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.new(1,1,1), TextColor3 = Color3.fromRGB(20,20,20)}):Play()
-        end
+-- Copy function
+local function copyTelegramLink()
+    pcall(function()
+        setclipboard("https://t.me/RBLX_SCRIPTS_MYANMAR")
     end)
+    StarterGui:SetCore("SendNotification", {
+        Title = "✅ Copied!",
+        Text = "Telegram link copied to clipboard!",
+        Duration = 4
+    })
+end
 
-    -- FPS boost (safer)
-    local fpsBtn = createButton("⚡ Boost FPS", 0.52, function(btn)
-        for _, v in workspace:GetDescendants() do
-            if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+joinButton.MouseButton1Click:Connect(function()
+    copyTelegramLink()
+end)
+
+-- ===================== MAIN HUB PANEL =====================
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 460, 0, 380)
+mainFrame.Position = UDim2.new(0.5, -230, 0.5, -190)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+mainFrame.Visible = false
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner", mainFrame)
+mainCorner.CornerRadius = UDim.new(0, 25)
+
+local mainGradient = Instance.new("UIGradient", mainFrame)
+mainGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 60)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
+}
+
+local mainImage = Instance.new("ImageLabel")
+mainImage.Size = UDim2.new(1, 0, 1, 0)
+mainImage.Image = "rbxassetid://121158130775447"
+mainImage.ImageTransparency = 0.75
+mainImage.BackgroundTransparency = 1
+mainImage.Parent = mainFrame
+
+local hubTitle = Instance.new("TextLabel")
+hubTitle.Size = UDim2.new(1, 0, 0.15, 0)
+hubTitle.Text = "MYANMAR HUB"
+hubTitle.TextColor3 = Color3.fromRGB(0, 255, 200)
+hubTitle.TextScaled = true
+hubTitle.Font = Enum.Font.GothamBlack
+hubTitle.BackgroundTransparency = 1
+hubTitle.Parent = mainFrame
+
+-- Close button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 50)
+closeButton.Position = UDim2.new(1, -60, 0, 10)
+closeButton.Text = "✕"
+closeButton.TextColor3 = Color3.fromRGB(255, 80, 80)
+closeButton.BackgroundTransparency = 1
+closeButton.TextScaled = true
+closeButton.Font = Enum.Font.GothamBold
+closeButton.Parent = mainFrame
+
+closeButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    squareButton.Visible = false
+end)
+
+-- FPS Display
+local fpsLabel = Instance.new("TextLabel")
+fpsLabel.Size = UDim2.new(0.45, 0, 0.1, 0)
+fpsLabel.Position = UDim2.new(0.05, 0, 0.2, 0)
+fpsLabel.Text = "FPS: 60"
+fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+fpsLabel.TextScaled = true
+fpsLabel.Font = Enum.Font.Gotham
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.Parent = mainFrame
+
+-- Shader Toggle
+local shaderButton = Instance.new("TextButton")
+shaderButton.Size = UDim2.new(0.85, 0, 0.13, 0)
+shaderButton.Position = UDim2.new(0.075, 0, 0.35, 0)
+shaderButton.Text = "Enable Beautiful Shader"
+shaderButton.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
+shaderButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+shaderButton.TextScaled = true
+shaderButton.Font = Enum.Font.GothamBold
+shaderButton.Parent = mainFrame
+
+local shaderCorner = Instance.new("UICorner", shaderButton)
+shaderCorner.CornerRadius = UDim.new(0, 16)
+local shaderStroke = Instance.new("UIStroke", shaderButton)
+shaderStroke.Color = Color3.fromRGB(255, 255, 255)
+shaderStroke.Thickness = 2
+
+local shaderEnabled = false
+local function toggleShader()
+    shaderEnabled = not shaderEnabled
+    if shaderEnabled then
+        shaderButton.Text = "Disable Shader"
+        shaderButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+        
+        -- Beautiful shader effects
+        local bloom = Lighting:FindFirstChild("Bloom") or Instance.new("BloomEffect")
+        bloom.Enabled = true
+        bloom.Intensity = 2
+        bloom.Size = 40
+        bloom.Threshold = 0.7
+        bloom.Parent = Lighting
+        
+        local sunrays = Lighting:FindFirstChild("SunRays") or Instance.new("SunRaysEffect")
+        sunrays.Enabled = true
+        sunrays.Intensity = 0.4
+        sunrays.Parent = Lighting
+        
+        local dof = Lighting:FindFirstChild("DepthOfField") or Instance.new("DepthOfFieldEffect")
+        dof.Enabled = true
+        dof.FocusDistance = 15
+        dof.InFocusRadius = 30
+        dof.Parent = Lighting
+        
+        local colorCorr = Lighting:FindFirstChild("ColorCorrection") or Instance.new("ColorCorrectionEffect")
+        colorCorr.Enabled = true
+        colorCorr.Brightness = 0.15
+        colorCorr.Contrast = 0.3
+        colorCorr.Saturation = 0.6
+        colorCorr.Parent = Lighting
+        
+        Lighting.GlobalShadows = true
+        Lighting.Brightness = 3
+    else
+        shaderButton.Text = "Enable Beautiful Shader"
+        shaderButton.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
+        
+        for _, v in pairs(Lighting:GetChildren()) do
+            if v:IsA("BloomEffect") or v:IsA("SunRaysEffect") or v:IsA("DepthOfFieldEffect") or v:IsA("ColorCorrectionEffect") then
+                v.Enabled = false
+            end
         end
         Lighting.GlobalShadows = false
+    end
+end
+shaderButton.MouseButton1Click:Connect(toggleShader)
+
+-- FPS Boost Toggle
+local fpsBoostButton = Instance.new("TextButton")
+fpsBoostButton.Size = UDim2.new(0.85, 0, 0.13, 0)
+fpsBoostButton.Position = UDim2.new(0.075, 0, 0.55, 0)
+fpsBoostButton.Text = "Enable FPS Boost"
+fpsBoostButton.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
+fpsBoostButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+fpsBoostButton.TextScaled = true
+fpsBoostButton.Font = Enum.Font.GothamBold
+fpsBoostButton.Parent = mainFrame
+
+local boostCorner = Instance.new("UICorner", fpsBoostButton)
+boostCorner.CornerRadius = UDim.new(0, 16)
+local boostStroke = Instance.new("UIStroke", fpsBoostButton)
+boostStroke.Color = Color3.fromRGB(255, 255, 255)
+boostStroke.Thickness = 2
+
+local boostEnabled = false
+local function toggleFPSBoost()
+    boostEnabled = not boostEnabled
+    if boostEnabled then
+        fpsBoostButton.Text = "Disable FPS Boost"
+        fpsBoostButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+        
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 999999
         settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-        btn.Text = "Boosted! ✅"
-        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(0,255,120)}):Play()
-        task.wait(1.8)
-        btn.Text = "⚡ Boost FPS"
-        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.new(1,1,1)}):Play()
-    end)
-
-    -- FPS counter
-    local fpsLabel = Instance.new("TextLabel", enhancer)
-    fpsLabel.Size = UDim2.new(0.9,0,0,35)
-    fpsLabel.Position = UDim2.new(0.05,0,0.78,0)
-    fpsLabel.BackgroundTransparency = 1
-    fpsLabel.TextColor3 = Color3.fromRGB(0,255,180)
-    fpsLabel.Font = Enum.Font.GothamBold
-    fpsLabel.TextSize = 20
-    fpsLabel.Text = "FPS: --"
-    local last = tick() local frames = 0
-    RunService.RenderStepped:Connect(function()
-        frames += 1
-        if tick() - last >= 1 then
-            fpsLabel.Text = "FPS: " .. frames
-            frames = 0
-            last = tick()
+        
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") then
+                obj.Enabled = false
+            end
         end
-    end)
+    else
+        fpsBoostButton.Text = "Enable FPS Boost"
+        fpsBoostButton.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
+        Lighting.GlobalShadows = true
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+    end
+end
+fpsBoostButton.MouseButton1Click:Connect(toggleFPSBoost)
 
-    -- Close button
-    closeBtn.MouseButton1Click:Connect(function()
-        clickSound:Play()
-        toggleEnhancer()
-    end)
+-- ===================== SQUARE ICON =====================
+local squareButton = Instance.new("ImageButton")
+squareButton.Size = UDim2.new(0, 90, 0, 90)
+squareButton.Position = UDim2.new(0.5, -45, 0.08, 0)
+squareButton.Image = "rbxassetid://121158130775447"
+squareButton.BackgroundTransparency = 1
+squareButton.Visible = false
+squareButton.Parent = screenGui
+
+local sqCorner = Instance.new("UICorner", squareButton)
+sqCorner.CornerRadius = UDim.new(1, 0)
+local sqStroke = Instance.new("UIStroke", squareButton)
+sqStroke.Color = Color3.fromRGB(0, 255, 200)
+sqStroke.Thickness = 6
+
+squareButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+end)
+
+-- ===================== FPS COUNTER =====================
+local frames = 0
+local lastTick = tick()
+
+RunService.RenderStepped:Connect(function()
+    frames += 1
+    if tick() - lastTick >= 1 then
+        fpsLabel.Text = "FPS: " .. frames
+        frames = 0
+        lastTick = tick()
+    end
+end)
+
+-- ===================== CONTINUE =====================
+continueButton.MouseButton1Click:Connect(function()
+    telegramFrame.Visible = false
+    mainFrame.Visible = true
+    squareButton.Visible = true
+end)
+
+-- ===================== SOUND EFFECTS =====================
+local clickSound = Instance.new("Sound")
+clickSound.SoundId = "rbxassetid://12221967"
+clickSound.Volume = 0.6
+clickSound.Parent = screenGui
+
+local function playClick()
+    clickSound:Play()
 end
 
--- ==================== TELEGRAM POPUP (Fixed) ====================
-if not gui:FindFirstChild("SeenTelegram") then
-    local popup = Instance.new("Frame", gui)
-    popup.Size = UDim2.new(0,380,0,260)
-    popup.Position = UDim2.new(0.5,0,0.5,0)
-    popup.AnchorPoint = Vector2.new(0.5,0.5)
-    popup.BackgroundColor3 = Color3.fromRGB(15,15,20)
-    popup.BackgroundTransparency = 0.25
-    popup.ZIndex = 20
-    popup.Active = true
-    popup.Draggable = true
+-- Attach sounds
+joinButton.MouseButton1Click:Connect(playClick)
+continueButton.MouseButton1Click:Connect(playClick)
+closeButton.MouseButton1Click:Connect(playClick)
+shaderButton.MouseButton1Click:Connect(playClick)
+fpsBoostButton.MouseButton1Click:Connect(playClick)
+squareButton.MouseButton1Click:Connect(playClick)
 
-    local pCorner = Instance.new("UICorner", popup); pCorner.CornerRadius = UDim.new(0,20)
+-- Optional extra feature: Press "H" to hide/show square icon
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.H then
+        squareButton.Visible = not squareButton.Visible
+    end
+end)
 
-    -- Background image (behind everything)
-    local bgImage = Instance.new("ImageLabel", popup)
-    bgImage.Size = UDim2.new(1,0,1,0)
-    bgImage.BackgroundTransparency = 1
-    bgImage.Image = IMAGE_ID
-    bgImage.ImageTransparency = 0.65
-    bgImage.ScaleType = Enum.ScaleType.Crop
-    bgImage.ZIndex = 1
-    bgImage.Active = false
-
-    local overlay = Instance.new("Frame", popup)
-    overlay.Size = UDim2.new(1,0,1,0)
-    overlay.BackgroundColor3 = Color3.new(0,0,0)
-    overlay.BackgroundTransparency = 0.4
-    overlay.ZIndex = 2
-
-    local title = Instance.new("TextLabel", popup)
-    title.Size = UDim2.new(1,0,0,50)
-    title.BackgroundTransparency = 1
-    title.Text = "⭐ Join for Free Scripts"
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 24
-    title.TextColor3 = Color3.new(1,1,1)
-    title.ZIndex = 10
-
-    local linkBtn = Instance.new("TextButton", popup)
-    linkBtn.Size = UDim2.new(0.85,0,0,55)
-    linkBtn.Position = UDim2.new(0.075,0,0.35,0)
-    linkBtn.BackgroundColor3 = Color3.fromRGB(0,120,255)
-    linkBtn.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
-    linkBtn.TextColor3 = Color3.new(1,1,1)
-    linkBtn.Font = Enum.Font.GothamBold
-    linkBtn.TextSize = 19
-    linkBtn.ZIndex = 10
-    local lbCorner = Instance.new("UICorner", linkBtn); lbCorner.CornerRadius = UDim.new(0,14)
-
-    local info = Instance.new("TextLabel", popup)
-    info.Size = UDim2.new(1,0,0,30)
-    info.Position = UDim2.new(0,0,0.58,0)
-    info.BackgroundTransparency = 1
-    info.Text = "Daily updates • No viruses"
-    info.TextColor3 = Color3.fromRGB(200,200,200)
-    info.Font = Enum.Font.Gotham
-    info.TextSize = 16
-    info.ZIndex = 10
-
-    local continueBtn = Instance.new("TextButton", popup)
-    continueBtn.Size = UDim2.new(0,120,0,50)
-    continueBtn.Position = UDim2.new(0.5,-60,1,-70)
-    continueBtn.BackgroundColor3 = Color3.fromRGB(0,255,140)
-    continueBtn.Text = "Continue"
-    continueBtn.TextColor3 = Color3.new(0,0,0)
-    continueBtn.Font = Enum.Font.GothamBold
-    continueBtn.TextSize = 20
-    continueBtn.ZIndex = 10
-    local cb2Corner = Instance.new("UICorner", continueBtn); cb2Corner.CornerRadius = UDim.new(0,12)
-
-    -- Button actions
-    linkBtn.MouseButton1Click:Connect(function()
-        clickSound:Play()
-        local url = "https://t.me/RBLX_SCRIPTS_MYANMAR"
-        if setclipboard then setclipboard(url) end
-        linkBtn.Text = "✅ Copied!"
-        task.wait(1.5)
-        linkBtn.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
-    end)
-
-    continueBtn.MouseButton1Click:Connect(function()
-        clickSound:Play()
-        local seen = Instance.new("BoolValue", gui)
-        seen.Name = "SeenTelegram"
-        seen.Value = true
-
-        popup:TweenSize(UDim2.new(0,0,0,0), Enum.EasingStyle.Back, Enum.EasingDirection.In, 0.5, true)
-        task.wait(0.55)
-        popup:Destroy()
-        showIcon()   -- ← Icon appears only now
-    end)
-else
-    showIcon()
-end
+print("Myanmar Hub loaded! Enjoy the beautiful shader & FPS tools ✨")
