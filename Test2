@@ -1,260 +1,302 @@
--- RBLX Scripts Myanmar Hub - Modern GUI Script (LocalScript)
--- Place this in StarterPlayer > StarterPlayerScripts
--- Works best with executors that support setclipboard() (most do)
+-- RBLX Enchancer - Modern Mini Hub (LocalScript)
+-- Place in StarterPlayer > StarterPlayerScripts
+-- Fully modernized, mini, draggable square, enhanced shader & more!
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 local StarterGui = game:GetService("StarterGui")
-local SoundService = game:GetService("SoundService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "MyanmarHub"
+screenGui.Name = "RBLXEnchancer"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- ===================== TELEGRAM FULLSCREEN =====================
-local telegramFrame = Instance.new("Frame")
-telegramFrame.Size = UDim2.new(1, 0, 1, 0)
-telegramFrame.BackgroundColor3 = Color3.fromRGB(10, 25, 45)
-telegramFrame.Parent = screenGui
+-- ===================== TELEGRAM JOIN PANEL (Centered, Fixed, Beautiful) =====================
+local telegramPanel = Instance.new("Frame")
+telegramPanel.Size = UDim2.new(0, 420, 0, 320)
+telegramPanel.Position = UDim2.new(0.5, -210, 0.5, -160)
+telegramPanel.BackgroundColor3 = Color3.fromRGB(15, 25, 45)
+telegramPanel.BorderSizePixel = 0
+telegramPanel.Parent = screenGui
 
-local bg = Instance.new("ImageLabel")
-bg.Size = UDim2.new(1, 0, 1, 0)
-bg.Image = "rbxassetid://121158130775447"
-bg.ImageTransparency = 0.5
-bg.BackgroundTransparency = 1
-bg.Parent = telegramFrame
+local panelCorner = Instance.new("UICorner", telegramPanel)
+panelCorner.CornerRadius = UDim.new(0, 24)
 
-local telegramLogo = Instance.new("ImageLabel") -- Use a nice Telegram icon (public asset)
-telegramLogo.Size = UDim2.new(0, 180, 0, 180)
-telegramLogo.Position = UDim2.new(0.5, -90, 0.25, -90)
-telegramLogo.Image = "rbxassetid://6031094678" -- Public Telegram paper plane icon
+local panelStroke = Instance.new("UIStroke", telegramPanel)
+panelStroke.Color = Color3.fromRGB(0, 170, 255)
+panelStroke.Thickness = 4
+
+local bgImage = Instance.new("ImageLabel")
+bgImage.Size = UDim2.new(1, 0, 1, 0)
+bgImage.Image = "rbxassetid://121158130775447"
+bgImage.ImageTransparency = 0.65
+bgImage.BackgroundTransparency = 1
+bgImage.Parent = telegramPanel
+
+local telegramLogo = Instance.new("ImageLabel")
+telegramLogo.Size = UDim2.new(0, 120, 0, 120)
+telegramLogo.Position = UDim2.new(0.5, -60, 0.15, 0)
+telegramLogo.Image = "rbxassetid://6031094678" -- Telegram paper plane
 telegramLogo.BackgroundTransparency = 1
-telegramLogo.Parent = telegramFrame
+telegramLogo.Parent = telegramPanel
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(0.9, 0, 0.1, 0)
-title.Position = UDim2.new(0.05, 0, 0.45, 0)
-title.Text = "Join Our Community!"
+title.Size = UDim2.new(0.9, 0, 0.12, 0)
+title.Position = UDim2.new(0.05, 0, 0.42, 0)
+title.Text = "JOIN OUR COMMUNITY"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextScaled = true
-title.Font = Enum.Font.GothamBold
+title.Font = Enum.Font.GothamBlack
 title.BackgroundTransparency = 1
-title.Parent = telegramFrame
+title.Parent = telegramPanel
 
-local linkLabel = Instance.new("TextLabel")
-linkLabel.Size = UDim2.new(0.7, 0, 0.07, 0)
-linkLabel.Position = UDim2.new(0.15, 0, 0.58, 0)
-linkLabel.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
-linkLabel.TextColor3 = Color3.fromRGB(0, 191, 255)
-linkLabel.TextScaled = true
-linkLabel.Font = Enum.Font.Gotham
-linkLabel.BackgroundTransparency = 1
-linkLabel.Parent = telegramFrame
+local linkBox = Instance.new("TextButton")
+linkBox.Size = UDim2.new(0.85, 0, 0.11, 0)
+linkBox.Position = UDim2.new(0.075, 0, 0.58, 0)
+linkBox.Text = "t.me/RBLX_SCRIPTS_MYANMAR"
+linkBox.TextColor3 = Color3.fromRGB(100, 200, 255)
+linkBox.TextScaled = true
+linkBox.Font = Enum.Font.Gotham
+linkBox.BackgroundColor3 = Color3.fromRGB(30, 40, 60)
+linkBox.Parent = telegramPanel
 
-local joinButton = Instance.new("TextButton")
-joinButton.Size = UDim2.new(0.4, 0, 0.09, 0)
-joinButton.Position = UDim2.new(0.3, 0, 0.7, 0)
-joinButton.Text = "Join Telegram"
-joinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-joinButton.BackgroundColor3 = Color3.fromRGB(0, 136, 204)
-joinButton.Font = Enum.Font.GothamBold
-joinButton.TextScaled = true
-joinButton.Parent = telegramFrame
+local boxCorner = Instance.new("UICorner", linkBox)
+boxCorner.CornerRadius = UDim.new(0, 12)
 
-local joinCorner = Instance.new("UICorner", joinButton)
-joinCorner.CornerRadius = UDim.new(0, 15)
-local joinStroke = Instance.new("UIStroke", joinButton)
-joinStroke.Color = Color3.fromRGB(255, 255, 255)
-joinStroke.Thickness = 3
-
-local continueButton = Instance.new("TextButton")
-continueButton.Size = UDim2.new(0.35, 0, 0.09, 0)
-continueButton.Position = UDim2.new(0.325, 0, 0.82, 0)
-continueButton.Text = "Continue →"
-continueButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-continueButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-continueButton.Font = Enum.Font.GothamBlack
-continueButton.TextScaled = true
-continueButton.Parent = telegramFrame
-
-local contCorner = Instance.new("UICorner", continueButton)
-contCorner.CornerRadius = UDim.new(0, 15)
-
--- Copy function
-local function copyTelegramLink()
-    pcall(function()
-        setclipboard("https://t.me/RBLX_SCRIPTS_MYANMAR")
-    end)
-    StarterGui:SetCore("SendNotification", {
-        Title = "✅ Copied!",
-        Text = "Telegram link copied to clipboard!",
-        Duration = 4
-    })
-end
-
-joinButton.MouseButton1Click:Connect(function()
-    copyTelegramLink()
+linkBox.MouseButton1Click:Connect(function()
+    setclipboard("https://t.me/RBLX_SCRIPTS_MYANMAR")
+    StarterGui:SetCore("SendNotification", {Title = "✅ Copied!", Text = "Telegram link saved!", Duration = 3})
 end)
 
--- ===================== MAIN HUB PANEL =====================
+local joinBtn = Instance.new("TextButton")
+joinBtn.Size = UDim2.new(0.6, 0, 0.12, 0)
+joinBtn.Position = UDim2.new(0.2, 0, 0.75, 0)
+joinBtn.Text = "JOIN TELEGRAM"
+joinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+joinBtn.BackgroundColor3 = Color3.fromRGB(0, 136, 204)
+joinBtn.Font = Enum.Font.GothamBold
+joinBtn.TextScaled = true
+joinBtn.Parent = telegramPanel
+
+local joinCorner = Instance.new("UICorner", joinBtn)
+joinCorner.CornerRadius = UDim.new(0, 16)
+
+local continueBtn = Instance.new("TextButton")
+continueBtn.Size = UDim2.new(0.5, 0, 0.11, 0)
+continueBtn.Position = UDim2.new(0.25, 0, 0.88, 0)
+continueBtn.Text = "Continue to Enchancer"
+continueBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+continueBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 180)
+continueBtn.Font = Enum.Font.GothamBlack
+continueBtn.TextScaled = true
+continueBtn.Parent = telegramPanel
+
+local contCorner = Instance.new("UICorner", continueBtn)
+contCorner.CornerRadius = UDim.new(0, 16)
+
+-- ===================== DRAGGABLE SQUARE ICON =====================
+local squareIcon = Instance.new("ImageButton")
+squareIcon.Size = UDim2.new(0, 85, 0, 85)
+squareIcon.Position = UDim2.new(0.05, 0, 0.5, -42)
+squareIcon.Image = "rbxassetid://121158130775447"
+squareIcon.BackgroundTransparency = 1
+squareIcon.Visible = false
+squareIcon.Parent = screenGui
+
+local sqCorner = Instance.new("UICorner", squareIcon)
+sqCorner.CornerRadius = UDim.new(1, 0) -- Perfect square
+
+local sqStroke = Instance.new("UIStroke", squareIcon)
+sqStroke.Color = Color3.fromRGB(0, 255, 200)
+sqStroke.Thickness = 7
+sqStroke.Transparency = 0.3
+
+-- Draggable
+local dragging, dragInput, dragStart, startPos
+squareIcon.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = squareIcon.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+squareIcon.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+        local delta = input.Position - dragStart
+        squareIcon.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- ===================== MINI MAIN HUB =====================
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 460, 0, 380)
-mainFrame.Position = UDim2.new(0.5, -230, 0.5, -190)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+mainFrame.Size = UDim2.new(0, 340, 0, 280)
+mainFrame.Position = UDim2.new(0.5, -170, 0.5, -140)
+mainFrame.BackgroundColor3 = Color3.fromRGB(18, 20, 35)
 mainFrame.Visible = false
 mainFrame.Parent = screenGui
 
 local mainCorner = Instance.new("UICorner", mainFrame)
-mainCorner.CornerRadius = UDim.new(0, 25)
+mainCorner.CornerRadius = UDim.new(0, 22)
 
 local mainGradient = Instance.new("UIGradient", mainFrame)
 mainGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 60)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 45, 70)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 18, 35))
 }
 
 local mainImage = Instance.new("ImageLabel")
 mainImage.Size = UDim2.new(1, 0, 1, 0)
 mainImage.Image = "rbxassetid://121158130775447"
-mainImage.ImageTransparency = 0.75
+mainImage.ImageTransparency = 0.8
 mainImage.BackgroundTransparency = 1
 mainImage.Parent = mainFrame
 
-local hubTitle = Instance.new("TextLabel")
-hubTitle.Size = UDim2.new(1, 0, 0.15, 0)
-hubTitle.Text = "MYANMAR HUB"
-hubTitle.TextColor3 = Color3.fromRGB(0, 255, 200)
-hubTitle.TextScaled = true
-hubTitle.Font = Enum.Font.GothamBlack
-hubTitle.BackgroundTransparency = 1
-hubTitle.Parent = mainFrame
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
+titleLabel.Text = "RBLX ENCHANCER"
+titleLabel.TextColor3 = Color3.fromRGB(0, 255, 220)
+titleLabel.TextScaled = true
+titleLabel.Font = Enum.Font.GothamBlack
+titleLabel.BackgroundTransparency = 1
+titleLabel.Parent = mainFrame
 
 -- Close button
-local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 50, 0, 50)
-closeButton.Position = UDim2.new(1, -60, 0, 10)
-closeButton.Text = "✕"
-closeButton.TextColor3 = Color3.fromRGB(255, 80, 80)
-closeButton.BackgroundTransparency = 1
-closeButton.TextScaled = true
-closeButton.Font = Enum.Font.GothamBold
-closeButton.Parent = mainFrame
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 40, 0, 40)
+closeBtn.Position = UDim2.new(1, -50, 0, 10)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(255, 90, 90)
+closeBtn.BackgroundTransparency = 1
+closeBtn.TextScaled = true
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Parent = mainFrame
 
-closeButton.MouseButton1Click:Connect(function()
-    mainFrame.Visible = false
-    squareButton.Visible = false
-end)
+-- FPS Display (under main frame)
+local fpsFrame = Instance.new("Frame")
+fpsFrame.Size = UDim2.new(0, 340, 0, 45)
+fpsFrame.Position = UDim2.new(0.5, -170, 0.5, 150)
+fpsFrame.BackgroundColor3 = Color3.fromRGB(20, 22, 38)
+fpsFrame.Visible = false
+fpsFrame.Parent = screenGui
 
--- FPS Display
+local fpsCorner = Instance.new("UICorner", fpsFrame)
+fpsCorner.CornerRadius = UDim.new(0, 18)
+
 local fpsLabel = Instance.new("TextLabel")
-fpsLabel.Size = UDim2.new(0.45, 0, 0.1, 0)
-fpsLabel.Position = UDim2.new(0.05, 0, 0.2, 0)
+fpsLabel.Size = UDim2.new(1, 0, 1, 0)
 fpsLabel.Text = "FPS: 60"
-fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
 fpsLabel.TextScaled = true
-fpsLabel.Font = Enum.Font.Gotham
+fpsLabel.Font = Enum.Font.GothamBold
 fpsLabel.BackgroundTransparency = 1
-fpsLabel.Parent = mainFrame
+fpsLabel.Parent = fpsFrame
 
--- Shader Toggle
-local shaderButton = Instance.new("TextButton")
-shaderButton.Size = UDim2.new(0.85, 0, 0.13, 0)
-shaderButton.Position = UDim2.new(0.075, 0, 0.35, 0)
-shaderButton.Text = "Enable Beautiful Shader"
-shaderButton.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
-shaderButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-shaderButton.TextScaled = true
-shaderButton.Font = Enum.Font.GothamBold
-shaderButton.Parent = mainFrame
+-- Buttons
+local function createButton(name, posY, defaultColor)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.88, 0, 0.18, 0)
+    btn.Position = UDim2.new(0.06, 0, posY, 0)
+    btn.Text = name
+    btn.BackgroundColor3 = defaultColor
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextScaled = true
+    btn.Font = Enum.Font.GothamBold
+    btn.Parent = mainFrame
+    
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0, 14)
+    
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = Color3.fromRGB(255, 255, 255)
+    stroke.Thickness = 2.5
+    return btn
+end
 
-local shaderCorner = Instance.new("UICorner", shaderButton)
-shaderCorner.CornerRadius = UDim.new(0, 16)
-local shaderStroke = Instance.new("UIStroke", shaderButton)
-shaderStroke.Color = Color3.fromRGB(255, 255, 255)
-shaderStroke.Thickness = 2
+local shaderBtn = createButton("Enable Ultra Shader", 0.28, Color3.fromRGB(0, 220, 140))
+local fpsBoostBtn = createButton("Activate FPS Boost", 0.52, Color3.fromRGB(0, 220, 140))
+local fullbrightBtn = createButton("Enable Fullbright", 0.76, Color3.fromRGB(0, 180, 255))
 
+-- Extra satisfying feature: Speed Boost
+local speedBtn = createButton("Speed x2", 1.0, Color3.fromRGB(255, 180, 0)) -- Will be hidden initially
+speedBtn.Position = UDim2.new(0.06, 0, 1.0, -55) -- Manual adjust
+
+-- ===================== SHADER (Ultra Beautiful) =====================
 local shaderEnabled = false
 local function toggleShader()
     shaderEnabled = not shaderEnabled
     if shaderEnabled then
-        shaderButton.Text = "Disable Shader"
-        shaderButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+        shaderBtn.Text = "Disable Ultra Shader"
+        shaderBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
         
-        -- Beautiful shader effects
-        local bloom = Lighting:FindFirstChild("Bloom") or Instance.new("BloomEffect")
-        bloom.Enabled = true
-        bloom.Intensity = 2
-        bloom.Size = 40
-        bloom.Threshold = 0.7
-        bloom.Parent = Lighting
-        
-        local sunrays = Lighting:FindFirstChild("SunRays") or Instance.new("SunRaysEffect")
-        sunrays.Enabled = true
-        sunrays.Intensity = 0.4
-        sunrays.Parent = Lighting
-        
-        local dof = Lighting:FindFirstChild("DepthOfField") or Instance.new("DepthOfFieldEffect")
-        dof.Enabled = true
-        dof.FocusDistance = 15
-        dof.InFocusRadius = 30
-        dof.Parent = Lighting
-        
-        local colorCorr = Lighting:FindFirstChild("ColorCorrection") or Instance.new("ColorCorrectionEffect")
-        colorCorr.Enabled = true
-        colorCorr.Brightness = 0.15
-        colorCorr.Contrast = 0.3
-        colorCorr.Saturation = 0.6
-        colorCorr.Parent = Lighting
-        
+        Lighting.Brightness = 5
         Lighting.GlobalShadows = true
-        Lighting.Brightness = 3
+        Lighting.ClockTime = 14
+        Lighting.OutdoorAmbient = Color3.fromRGB(100, 120, 150)
+        
+        local bloom = Lighting:FindFirstChild("Bloom") or Instance.new("BloomEffect", Lighting)
+        bloom.Intensity = 3.2
+        bloom.Size = 48
+        bloom.Threshold = 0.6
+        
+        local sunrays = Lighting:FindFirstChild("SunRays") or Instance.new("SunRaysEffect", Lighting)
+        sunrays.Intensity = 0.55
+        
+        local dof = Lighting:FindFirstChild("DepthOfField") or Instance.new("DepthOfFieldEffect", Lighting)
+        dof.Enabled = true
+        dof.FocusDistance = 20
+        dof.InFocusRadius = 45
+        
+        local colorCorr = Lighting:FindFirstChild("ColorCorrection") or Instance.new("ColorCorrectionEffect", Lighting)
+        colorCorr.Brightness = 0.25
+        colorCorr.Contrast = 0.35
+        colorCorr.Saturation = 0.8
+        
+        local atmosphere = Lighting:FindFirstChild("Atmosphere") or Instance.new("Atmosphere", Lighting)
+        atmosphere.Density = 0.35
+        atmosphere.Offset = 0.28
+        atmosphere.Color = Color3.fromRGB(180, 200, 255)
+        atmosphere.Decay = Color3.fromRGB(90, 110, 140)
+        atmosphere.Glare = 1.2
+        atmosphere.Haze = 0.6
     else
-        shaderButton.Text = "Enable Beautiful Shader"
-        shaderButton.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
+        shaderBtn.Text = "Enable Ultra Shader"
+        shaderBtn.BackgroundColor3 = Color3.fromRGB(0, 220, 140)
         
         for _, v in pairs(Lighting:GetChildren()) do
-            if v:IsA("BloomEffect") or v:IsA("SunRaysEffect") or v:IsA("DepthOfFieldEffect") or v:IsA("ColorCorrectionEffect") then
+            if v:IsA("PostEffect") or v:IsA("Atmosphere") then
                 v.Enabled = false
             end
         end
+        Lighting.Brightness = 2
         Lighting.GlobalShadows = false
     end
 end
-shaderButton.MouseButton1Click:Connect(toggleShader)
+shaderBtn.MouseButton1Click:Connect(toggleShader)
 
--- FPS Boost Toggle
-local fpsBoostButton = Instance.new("TextButton")
-fpsBoostButton.Size = UDim2.new(0.85, 0, 0.13, 0)
-fpsBoostButton.Position = UDim2.new(0.075, 0, 0.55, 0)
-fpsBoostButton.Text = "Enable FPS Boost"
-fpsBoostButton.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
-fpsBoostButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-fpsBoostButton.TextScaled = true
-fpsBoostButton.Font = Enum.Font.GothamBold
-fpsBoostButton.Parent = mainFrame
-
-local boostCorner = Instance.new("UICorner", fpsBoostButton)
-boostCorner.CornerRadius = UDim.new(0, 16)
-local boostStroke = Instance.new("UIStroke", fpsBoostButton)
-boostStroke.Color = Color3.fromRGB(255, 255, 255)
-boostStroke.Thickness = 2
-
+-- ===================== FPS BOOST =====================
 local boostEnabled = false
 local function toggleFPSBoost()
     boostEnabled = not boostEnabled
     if boostEnabled then
-        fpsBoostButton.Text = "Disable FPS Boost"
-        fpsBoostButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+        fpsBoostBtn.Text = "BOOSTED ✓"
+        fpsBoostBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
         
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
         Lighting.GlobalShadows = false
         Lighting.FogEnd = 999999
-        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
         
         for _, obj in pairs(workspace:GetDescendants()) do
             if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") then
@@ -262,76 +304,124 @@ local function toggleFPSBoost()
             end
         end
     else
-        fpsBoostButton.Text = "Enable FPS Boost"
-        fpsBoostButton.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
-        Lighting.GlobalShadows = true
+        fpsBoostBtn.Text = "Activate FPS Boost"
+        fpsBoostBtn.BackgroundColor3 = Color3.fromRGB(0, 220, 140)
         settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
     end
 end
-fpsBoostButton.MouseButton1Click:Connect(toggleFPSBoost)
+fpsBoostBtn.MouseButton1Click:Connect(toggleFPSBoost)
 
--- ===================== SQUARE ICON =====================
-local squareButton = Instance.new("ImageButton")
-squareButton.Size = UDim2.new(0, 90, 0, 90)
-squareButton.Position = UDim2.new(0.5, -45, 0.08, 0)
-squareButton.Image = "rbxassetid://121158130775447"
-squareButton.BackgroundTransparency = 1
-squareButton.Visible = false
-squareButton.Parent = screenGui
+-- ===================== FULLBRIGHT =====================
+local fullbrightEnabled = false
+local function toggleFullbright()
+    fullbrightEnabled = not fullbrightEnabled
+    if fullbrightEnabled then
+        fullbrightBtn.Text = "Disable Fullbright"
+        fullbrightBtn.BackgroundColor3 = Color3.fromRGB(255, 220, 80)
+        Lighting.Brightness = 6
+        Lighting.ClockTime = 12
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+    else
+        fullbrightBtn.Text = "Enable Fullbright"
+        fullbrightBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+        Lighting.Brightness = 2
+    end
+end
+fullbrightBtn.MouseButton1Click:Connect(toggleFullbright)
 
-local sqCorner = Instance.new("UICorner", squareButton)
-sqCorner.CornerRadius = UDim.new(1, 0)
-local sqStroke = Instance.new("UIStroke", squareButton)
-sqStroke.Color = Color3.fromRGB(0, 255, 200)
-sqStroke.Thickness = 6
+-- ===================== SPEED BOOST =====================
+local speedEnabled = false
+local originalSpeed = 16
+local function toggleSpeed()
+    speedEnabled = not speedEnabled
+    if speedEnabled then
+        speedBtn.Text = "Speed: NORMAL"
+        speedBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 80)
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            originalSpeed = player.Character.Humanoid.WalkSpeed
+            player.Character.Humanoid.WalkSpeed = 35
+        end
+    else
+        speedBtn.Text = "Speed x2"
+        speedBtn.BackgroundColor3 = Color3.fromRGB(255, 180, 0)
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = originalSpeed
+        end
+    end
+end
+speedBtn.MouseButton1Click:Connect(toggleSpeed)
 
-squareButton.MouseButton1Click:Connect(function()
-    mainFrame.Visible = not mainFrame.Visible
+-- ===================== INFINITE JUMP (Extra Feature) =====================
+local infJumpEnabled = false
+local jumpConnection
+local function toggleInfJump()
+    infJumpEnabled = not infJumpEnabled
+    if infJumpEnabled then
+        jumpConnection = UserInputService.JumpRequest:Connect(function()
+            if player.Character and player.Character:FindFirstChild("Humanoid") then
+                player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    else
+        if jumpConnection then jumpConnection:Disconnect() end
+    end
+end
+
+-- Add a hidden toggle for inf jump (press J key for fun)
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.J then
+        toggleInfJump()
+        StarterGui:SetCore("SendNotification", {Title = "Infinite Jump", Text = infJumpEnabled and "ENABLED" or "DISABLED", Duration = 2})
+    end
 end)
 
 -- ===================== FPS COUNTER =====================
 local frames = 0
-local lastTick = tick()
-
+local lastTime = tick()
 RunService.RenderStepped:Connect(function()
     frames += 1
-    if tick() - lastTick >= 1 then
-        fpsLabel.Text = "FPS: " .. frames
+    if tick() - lastTime >= 1 then
+        fpsLabel.Text = "FPS: " .. math.floor(frames)
         frames = 0
-        lastTick = tick()
+        lastTime = tick()
     end
 end)
 
--- ===================== CONTINUE =====================
-continueButton.MouseButton1Click:Connect(function()
-    telegramFrame.Visible = false
-    mainFrame.Visible = true
-    squareButton.Visible = true
-end)
-
--- ===================== SOUND EFFECTS =====================
-local clickSound = Instance.new("Sound")
+-- ===================== BUTTON ANIMATIONS & SOUNDS =====================
+local clickSound = Instance.new("Sound", screenGui)
 clickSound.SoundId = "rbxassetid://12221967"
-clickSound.Volume = 0.6
-clickSound.Parent = screenGui
+clickSound.Volume = 0.7
 
-local function playClick()
-    clickSound:Play()
+local function animatePress(btn)
+    local originalSize = btn.Size
+    TweenService:Create(btn, TweenInfo.new(0.1), {Size = originalSize * 0.92}):Play()
+    wait(0.1)
+    TweenService:Create(btn, TweenInfo.new(0.15), {Size = originalSize}):Play()
 end
 
--- Attach sounds
-joinButton.MouseButton1Click:Connect(playClick)
-continueButton.MouseButton1Click:Connect(playClick)
-closeButton.MouseButton1Click:Connect(playClick)
-shaderButton.MouseButton1Click:Connect(playClick)
-fpsBoostButton.MouseButton1Click:Connect(playClick)
-squareButton.MouseButton1Click:Connect(playClick)
+for _, btn in pairs({shaderBtn, fpsBoostBtn, fullbrightBtn, speedBtn, joinBtn, continueBtn}) do
+    btn.MouseButton1Click:Connect(function()
+        clickSound:Play()
+        animatePress(btn)
+    end)
+end
 
--- Optional extra feature: Press "H" to hide/show square icon
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.H then
-        squareButton.Visible = not squareButton.Visible
-    end
+-- ===================== LOGIC =====================
+continueBtn.MouseButton1Click:Connect(function()
+    telegramPanel:Destroy()
+    squareIcon.Visible = true
+    mainFrame.Visible = true
+    fpsFrame.Visible = true
 end)
 
-print("Myanmar Hub loaded! Enjoy the beautiful shader & FPS tools ✨")
+squareIcon.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+    fpsFrame.Visible = mainFrame.Visible
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    fpsFrame.Visible = false
+end)
+
+print("RBLX Enchancer loaded! Drag the square, enjoy the ultra shader & boosts ✨")
